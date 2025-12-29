@@ -159,10 +159,10 @@ export class ExecutionService {
             VALUES (${escapedValues.join(', ')})
           `;
 
-          const result = await this.db.rawQuery<any>(insertQuery);
-          
+          const result: any = await this.db.rawQuery<any>(insertQuery);
+
           // Store generated ID for child tables
-          if (result.insertId) {
+          if (result && typeof result === 'object' && 'insertId' in result) {
             generatedIds.set(tableName, result.insertId);
             console.log(`✓ Inserted into ${tableName}, ID: ${result.insertId}`);
           }
@@ -203,8 +203,8 @@ export class ExecutionService {
         WHERE id IN (${allIds.map(id => mysql.escape(id)).join(',')})
       `;
       
-      const deleteResult = await this.db.rawQuery<any>(deleteQuery);
-      moved = deleteResult.affectedRows || 0;
+      const deleteResult: any = await this.db.rawQuery<any>(deleteQuery);
+      moved = (deleteResult && typeof deleteResult === 'object' && 'affectedRows' in deleteResult) ? deleteResult.affectedRows : 0;
       
       if (processed < records.length) {
         console.log(`✓ Moved ${moved} records to ${destTable} (${processed} processed successfully, ${records.length - processed} archived without processing)\n`);
@@ -230,8 +230,8 @@ export class ExecutionService {
       await this.db.rawQuery(cleanupCopyQuery);
 
       const cleanupDeleteQuery = `DELETE FROM ${mysql.escapeId(toProcessTable)}`;
-      const cleanupResult = await this.db.rawQuery<any>(cleanupDeleteQuery);
-      const archived = cleanupResult.affectedRows || 0;
+      const cleanupResult: any = await this.db.rawQuery<any>(cleanupDeleteQuery);
+      const archived = (cleanupResult && typeof cleanupResult === 'object' && 'affectedRows' in cleanupResult) ? cleanupResult.affectedRows : 0;
       
       console.log(`✓ Archived ${archived} records to ${destTable} (did not match filter criteria)\n`);
       moved += archived;
