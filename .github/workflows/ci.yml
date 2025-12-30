@@ -1,0 +1,231 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  backend-tests:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: test_json
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Wait for MySQL
+        run: |
+          until mysqladmin ping -h "127.0.0.1" --silent; do
+            echo 'waiting for mysql...'
+            sleep 2
+          done
+
+      - name: Setup database
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_USER: root
+          DB_PASSWORD: root
+          DB_NAME: test_json
+        working-directory: ./backend
+        run: |
+          mysql -h 127.0.0.1 -u root -proot test_json -e "
+          CREATE TABLE IF NOT EXISTS filter_presets (
+            id INT PRIMARY KEY AUTO_INCREMENT,
+            name VARCHAR(255) UNIQUE NOT NULL,
+            description TEXT,
+            base_table_name VARCHAR(255) NOT NULL,
+            where_conditions JSON,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+          );
+          CREATE TABLE IF NOT EXISTS mapping_configs (
+            id INT PRIMARY KEY AUTO_INCREMENT,
+            name VARCHAR(255) UNIQUE NOT NULL,
+            description TEXT,
+            base_table_name VARCHAR(255) NOT NULL,
+            where_conditions JSON,
+            tables JSON NOT NULL,
+            mappings JSON NOT NULL,
+            relationships JSON,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+          );"
+
+      - name: Run backend unit tests
+        working-directory: ./backend
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_USER: root
+          DB_PASSWORD: root
+          DB_NAME: test_json
+        run: npm run test:unit
+
+      - name: Run backend integration tests
+        working-directory: ./backend
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_USER: root
+          DB_PASSWORD: root
+          DB_NAME: test_json
+        run: npm run test:integration
+
+      - name: Generate backend coverage
+        working-directory: ./backend
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_USER: root
+          DB_PASSWORD: root
+          DB_NAME: test_json
+        run: npm run test:coverage
+
+      - name: Upload backend coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./backend/coverage/lcov.info
+          flags: backend
+          name: backend-coverage
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  frontend-tests:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Run frontend unit tests
+        working-directory: ./frontend
+        run: npm run test:unit
+
+      - name: Run frontend integration tests
+        working-directory: ./frontend
+        run: npm run test:integration
+
+      - name: Generate frontend coverage
+        working-directory: ./frontend
+        run: npm run test:coverage
+
+      - name: Upload frontend coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./frontend/coverage/lcov.info
+          flags: frontend
+          name: frontend-coverage
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Install Playwright browsers
+        working-directory: ./frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        working-directory: ./frontend
+        run: npm run test:e2e
+
+      - name: Upload E2E test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          retention-days: 7
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Run backend linter (if configured)
+        working-directory: ./backend
+        run: npm run lint --if-present
+
+      - name: Run frontend linter (if configured)
+        working-directory: ./frontend
+        run: npm run lint --if-present
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Install frontend dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Build backend
+        working-directory: ./backend
+        run: npm run build --if-present
+
+      - name: Build frontend
+        working-directory: ./frontend
+        run: npm run build
