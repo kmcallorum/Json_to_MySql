@@ -7,6 +7,7 @@ import { DragDropMapper } from './components/mapping/DragDropMapper';
 import { RelationshipEditor } from './components/mapping/RelationshipEditor';
 import { SqlGenerator } from './components/mapping/SqlGenerator';
 import { SaveLoadConfig } from './components/mapping/SaveLoadConfig';
+import { StagingWorkflow } from './components/staging/StagingWorkflow';
 export const App = () => {
     const [currentStep, setCurrentStep] = useState('analyze');
     const [analysis, setAnalysis] = useState(null);
@@ -14,6 +15,8 @@ export const App = () => {
     const [selectedTables, setSelectedTables] = useState([]);
     const [mappings, setMappings] = useState([]);
     const [relationships, setRelationships] = useState([]);
+    const [executionCompleted, setExecutionCompleted] = useState(false);
+    const [showStaging, setShowStaging] = useState(false);
     const handleAnalysisComplete = (analysisResult, meta) => {
         setAnalysis(analysisResult);
         setMetadata(meta);
@@ -60,6 +63,17 @@ export const App = () => {
         setSelectedTables([]);
         setMappings([]);
         setRelationships([]);
+        setExecutionCompleted(false);
+        setShowStaging(false);
+    };
+    const handleExecutionComplete = (result) => {
+        setExecutionCompleted(true);
+    };
+    const handleOpenStaging = () => {
+        setShowStaging(true);
+    };
+    const handleCloseStaging = () => {
+        setShowStaging(false);
     };
     const suggestedTables = analysis
         ? Array.from(new Set(analysis.fields.map(f => f.suggestedTable)))
@@ -149,14 +163,23 @@ export const App = () => {
                                     borderRadius: '4px',
                                     cursor: 'pointer',
                                     fontWeight: 'bold',
-                                }, children: "Continue to Execute \u2192" })] })] })), currentStep === 'generate-sql' && metadata && (_jsxs("div", { children: [_jsx("h2", { children: "Execute Flattening Process" }), _jsx(SqlGenerator, { tables: selectedTables, mappings: mappings, baseTableName: metadata.baseTableName, whereConditions: metadata.appliedFilters, relationships: relationships }), _jsxs("div", { style: { marginTop: '30px', display: 'flex', gap: '10px' }, children: [_jsx("button", { onClick: () => setCurrentStep('define-relationships'), style: {
+                                }, children: "Continue to Execute \u2192" })] })] })), currentStep === 'generate-sql' && metadata && (_jsxs("div", { children: [_jsx("h2", { children: "Execute Flattening Process" }), _jsx(SqlGenerator, { tables: selectedTables, mappings: mappings, baseTableName: metadata.baseTableName, whereConditions: metadata.appliedFilters, relationships: relationships, onExecutionComplete: handleExecutionComplete }), _jsxs("div", { style: { marginTop: '30px', display: 'flex', gap: '10px', flexWrap: 'wrap' }, children: [_jsx("button", { onClick: () => setCurrentStep('define-relationships'), style: {
                                     padding: '10px 20px',
                                     backgroundColor: '#6c757d',
                                     color: 'white',
                                     border: 'none',
                                     borderRadius: '4px',
                                     cursor: 'pointer',
-                                }, children: "\u2190 Back to Relationships" }), _jsx("button", { onClick: handleStartOver, style: {
+                                }, children: "\u2190 Back to Relationships" }), executionCompleted && (_jsx("button", { onClick: handleOpenStaging, style: {
+                                    padding: '12px 24px',
+                                    backgroundColor: '#28a745',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer',
+                                    fontWeight: 'bold',
+                                    fontSize: '16px',
+                                }, children: "\uD83D\uDCE6 Stage Data" })), _jsx("button", { onClick: handleStartOver, style: {
                                     padding: '10px 20px',
                                     backgroundColor: '#007bff',
                                     color: 'white',
@@ -164,5 +187,5 @@ export const App = () => {
                                     borderRadius: '4px',
                                     cursor: 'pointer',
                                     fontWeight: 'bold',
-                                }, children: "\uD83D\uDD04 Start New Analysis" })] })] }))] }));
+                                }, children: "\uD83D\uDD04 Start New Analysis" })] })] })), showStaging && (_jsx(StagingWorkflow, { sourceTables: selectedTables, onClose: handleCloseStaging }))] }));
 };

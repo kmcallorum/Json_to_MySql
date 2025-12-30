@@ -6,6 +6,7 @@ import filterRoutes from './routes/filterRoutes.js';
 import mappingRoutes from './routes/mappingRoutes.js';
 import analysisRoutes from './routes/analysisRoutes.js';
 import tableRoutes from './routes/tableRoutes.js';
+import stagingRoutes from './routes/stagingRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -24,6 +25,7 @@ app.use('/api/filters', filterRoutes);
 app.use('/api/mappings', mappingRoutes);
 app.use('/api/analysis', analysisRoutes);
 app.use('/api/tables', tableRoutes);
+app.use('/api/staging', stagingRoutes);
 
 // Start server
 app.listen(PORT, () => {

@@ -1,7 +1,7 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useState } from 'react';
 import { api } from '../../services/api';
-export const SqlGenerator = ({ tables, mappings, baseTableName, whereConditions = [], relationships = [], }) => {
+export const SqlGenerator = ({ tables, mappings, baseTableName, whereConditions = [], relationships = [], onExecutionComplete, }) => {
     const [isExecuting, setIsExecuting] = useState(false);
     const [executionResult, setExecutionResult] = useState(null);
     const generateCreateTableSql = (table) => {
@@ -95,6 +95,10 @@ export const SqlGenerator = ({ tables, mappings, baseTableName, whereConditions 
             setExecutionResult(result);
             if (result.success) {
                 alert(`Success!\n\nRecords processed: ${result.recordsProcessed}\nRecords moved: ${result.recordsMoved}\nTables created: ${result.tablesCreated.join(', ') || 'none'}`);
+                // Notify parent that execution completed successfully
+                if (onExecutionComplete) {
+                    onExecutionComplete(result);
+                }
             }
             else {
                 alert(`Error: ${result.error}`);

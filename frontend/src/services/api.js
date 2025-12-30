@@ -116,4 +116,29 @@ export const api = {
         });
         return response.json();
     },
+    // Staging API methods
+    async analyzeTables(tableNames) {
+        const response = await fetch(`${API_URL}/staging/analyze-tables`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tableNames }),
+        });
+        return response.json();
+    },
+    async createStagingTables(tables) {
+        const response = await fetch(`${API_URL}/staging/create-tables`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tables }),
+        });
+        return response.json();
+    },
+    async executeStagingCopy(data) {
+        const response = await fetch(`${API_URL}/staging/execute`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        return response.json();
+    },
 };

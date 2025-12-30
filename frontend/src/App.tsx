@@ -6,6 +6,7 @@ import { DragDropMapper } from './components/mapping/DragDropMapper';
 import { RelationshipEditor } from './components/mapping/RelationshipEditor';
 import { SqlGenerator } from './components/mapping/SqlGenerator';
 import { SaveLoadConfig } from './components/mapping/SaveLoadConfig';
+import { StagingWorkflow } from './components/staging/StagingWorkflow';
 import { SchemaAnalysis, TableDefinition, FieldMapping, TableRelationship } from './types';
 
 type Step = 'analyze' | 'select-tables' | 'map-fields' | 'define-relationships' | 'generate-sql';
@@ -17,6 +18,8 @@ export const App: React.FC = () => {
   const [selectedTables, setSelectedTables] = useState<TableDefinition[]>([]);
   const [mappings, setMappings] = useState<FieldMapping[]>([]);
   const [relationships, setRelationships] = useState<TableRelationship[]>([]);
+  const [executionCompleted, setExecutionCompleted] = useState(false);
+  const [showStaging, setShowStaging] = useState(false);
 
   const handleAnalysisComplete = (analysisResult: SchemaAnalysis, meta: any) => {
     setAnalysis(analysisResult);
@@ -73,6 +76,20 @@ export const App: React.FC = () => {
     setSelectedTables([]);
     setMappings([]);
     setRelationships([]);
+    setExecutionCompleted(false);
+    setShowStaging(false);
+  };
+
+  const handleExecutionComplete = (result: any) => {
+    setExecutionCompleted(true);
+  };
+
+  const handleOpenStaging = () => {
+    setShowStaging(true);
+  };
+
+  const handleCloseStaging = () => {
+    setShowStaging(false);
   };
 
   const suggestedTables = analysis 
@@ -300,9 +317,10 @@ export const App: React.FC = () => {
             baseTableName={metadata.baseTableName}
             whereConditions={metadata.appliedFilters}
             relationships={relationships}
+            onExecutionComplete={handleExecutionComplete}
           />
 
-          <div style={{ marginTop: '30px', display: 'flex', gap: '10px' }}>
+          <div style={{ marginTop: '30px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
             <button
               onClick={() => setCurrentStep('define-relationships')}
               style={{
@@ -316,6 +334,23 @@ export const App: React.FC = () => {
             >
               ← Back to Relationships
             </button>
+            {executionCompleted && (
+              <button
+                onClick={handleOpenStaging}
+                style={{
+                  padding: '12px 24px',
+                  backgroundColor: '#28a745',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  fontSize: '16px',
+                }}
+              >
+                📦 Stage Data
+              </button>
+            )}
             <button
               onClick={handleStartOver}
               style={{
@@ -332,6 +367,14 @@ export const App: React.FC = () => {
             </button>
           </div>
         </div>
+      )}
+
+      {/* Staging Workflow Modal */}
+      {showStaging && (
+        <StagingWorkflow
+          sourceTables={selectedTables}
+          onClose={handleCloseStaging}
+        />
       )}
     </div>
   );

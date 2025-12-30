@@ -8,6 +8,7 @@ interface SqlGeneratorProps {
   baseTableName: string;
   whereConditions?: any[];
   relationships?: TableRelationship[];
+  onExecutionComplete?: (result: any) => void;
 }
 
 export const SqlGenerator: React.FC<SqlGeneratorProps> = ({
@@ -16,6 +17,7 @@ export const SqlGenerator: React.FC<SqlGeneratorProps> = ({
   baseTableName,
   whereConditions = [],
   relationships = [],
+  onExecutionComplete,
 }) => {
   const [isExecuting, setIsExecuting] = useState(false);
   const [executionResult, setExecutionResult] = useState<any>(null);
@@ -130,6 +132,11 @@ export const SqlGenerator: React.FC<SqlGeneratorProps> = ({
 
       if (result.success) {
         alert(`Success!\n\nRecords processed: ${result.recordsProcessed}\nRecords moved: ${result.recordsMoved}\nTables created: ${result.tablesCreated.join(', ') || 'none'}`);
+
+        // Notify parent that execution completed successfully
+        if (onExecutionComplete) {
+          onExecutionComplete(result);
+        }
       } else {
         alert(`Error: ${result.error}`);
       }
