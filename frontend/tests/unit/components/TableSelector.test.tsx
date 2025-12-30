@@ -631,4 +631,5 @@ describe('TableSelector', () => {
     const tables = mockOnTablesSelected.mock.calls[0][0] as any;
     expect(tables).toHaveLength(2); // Duplicates removed
   });
+
 });

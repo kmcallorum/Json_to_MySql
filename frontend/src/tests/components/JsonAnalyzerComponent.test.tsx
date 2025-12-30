@@ -1,4 +1,6 @@
+import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import { JsonAnalyzerComponent } from '../../components/analysis/JsonAnalyzerComponent';
 import { api } from '../../services/api';
 
@@ -171,5 +173,97 @@ describe('JsonAnalyzerComponent', () => {
 
     fireEvent.change(sampleSizeInput, { target: { value: '500' } });
     expect(sampleSizeInput).toHaveValue(500);
+  });
+
+  it('should handle connection exception', async () => {
+    (api.testConnection as jest.Mock).mockRejectedValue(new Error('Network error'));
+
+    render(<JsonAnalyzerComponent onAnalysisComplete={mockOnAnalysisComplete} />);
+
+    fireEvent.click(screen.getByText(/Test Connection/i));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Network error/i)).toBeInTheDocument();
+    });
+  });
+
+  it('should handle discover fields error response', async () => {
+    (api.discoverFields as jest.Mock).mockResolvedValue({
+      success: false,
+      error: 'Table not found'
+    });
+
+    render(<JsonAnalyzerComponent onAnalysisComplete={mockOnAnalysisComplete} />);
+
+    fireEvent.click(screen.getByText(/Discover All Fields & Values/i));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Table not found/i)).toBeInTheDocument();
+    });
+  });
+
+  it('should handle discover fields exception', async () => {
+    (api.discoverFields as jest.Mock).mockRejectedValue(new Error('Database error'));
+
+    render(<JsonAnalyzerComponent onAnalysisComplete={mockOnAnalysisComplete} />);
+
+    fireEvent.click(screen.getByText(/Discover All Fields & Values/i));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Database error/i)).toBeInTheDocument();
+    });
+  });
+
+  it('should handle analyze error response', async () => {
+    (api.discoverFields as jest.Mock).mockResolvedValue({
+      success: true,
+      fields: [{ path: 'test.field', uniqueValues: [], nullCount: 0, totalCount: 100 }]
+    });
+
+    (api.analyze as jest.Mock).mockResolvedValue({
+      success: false,
+      error: 'Analysis failed'
+    });
+
+    render(<JsonAnalyzerComponent onAnalysisComplete={mockOnAnalysisComplete} />);
+
+    // Discover fields first
+    fireEvent.click(screen.getByText(/Discover All Fields & Values/i));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Analyze & Suggest Tables/i)).toBeInTheDocument();
+    });
+
+    // Click analyze
+    fireEvent.click(screen.getByText(/Analyze & Suggest Tables/i));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Analysis failed/i)).toBeInTheDocument();
+    });
+  });
+
+  it('should handle analyze exception', async () => {
+    (api.discoverFields as jest.Mock).mockResolvedValue({
+      success: true,
+      fields: [{ path: 'test.field', uniqueValues: [], nullCount: 0, totalCount: 100 }]
+    });
+
+    (api.analyze as jest.Mock).mockRejectedValue(new Error('Server error'));
+
+    render(<JsonAnalyzerComponent onAnalysisComplete={mockOnAnalysisComplete} />);
+
+    // Discover fields first
+    fireEvent.click(screen.getByText(/Discover All Fields & Values/i));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Analyze & Suggest Tables/i)).toBeInTheDocument();
+    });
+
+    // Click analyze
+    fireEvent.click(screen.getByText(/Analyze & Suggest Tables/i));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Server error/i)).toBeInTheDocument();
+    });
   });
 });
