@@ -1,0 +1,125 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - heading "JSON to SQL Flattener" [level=1] [ref=e5]
+  - generic [ref=e6]:
+    - generic [ref=e7]: ✓ 1. Analyzed
+    - generic [ref=e9]: 2. Selecting...
+    - generic [ref=e11]: 3. Map
+    - generic [ref=e13]: 4. Relations
+    - generic [ref=e15]: 5. Execute
+  - generic [ref=e16]:
+    - generic [ref=e17]:
+      - heading "Discovered Schema" [level=2] [ref=e18]
+      - generic [ref=e19]:
+        - heading "Source Information" [level=3] [ref=e20]
+        - paragraph [ref=e21]:
+          - strong [ref=e22]: "Source Table:"
+          - text: test_data_toprocess
+        - paragraph [ref=e23]:
+          - strong [ref=e24]: "Destination Table:"
+          - text: test_data
+        - paragraph [ref=e25]:
+          - strong [ref=e26]: "Event Type Filter:"
+        - paragraph [ref=e27]:
+          - strong [ref=e28]: "Total Records in Table:"
+          - text: 1,000
+        - paragraph [ref=e29]:
+          - strong [ref=e30]: "Analyzed Sample:"
+          - text: 100 records
+      - paragraph [ref=e32]: Found 4 unique field(s)
+      - table [ref=e34]:
+        - rowgroup [ref=e35]:
+          - row "Field Path Type Array? Nullable? Samples Suggested Table Suggested Column SQL Type" [ref=e36]:
+            - columnheader "Field Path" [ref=e37]
+            - columnheader "Type" [ref=e38]
+            - columnheader "Array?" [ref=e39]
+            - columnheader "Nullable?" [ref=e40]
+            - columnheader "Samples" [ref=e41]
+            - columnheader "Suggested Table" [ref=e42]
+            - columnheader "Suggested Column" [ref=e43]
+            - columnheader "SQL Type" [ref=e44]
+        - rowgroup [ref=e45]:
+          - row "_source.type string \"event.test\" \"event.run\" events type VARCHAR(255)" [ref=e46]:
+            - cell "_source.type" [ref=e47]:
+              - code [ref=e48]: _source.type
+            - cell "string" [ref=e49]
+            - cell [ref=e50]
+            - cell [ref=e51]
+            - cell "\"event.test\" \"event.run\"" [ref=e52]:
+              - generic [ref=e53]:
+                - generic [ref=e54]: "\"event.test\""
+                - generic [ref=e55]: "\"event.run\""
+            - cell "events" [ref=e56]:
+              - strong [ref=e57]: events
+            - cell "type" [ref=e58]
+            - cell "VARCHAR(255)" [ref=e59]:
+              - code [ref=e60]: VARCHAR(255)
+          - row "_source.status string ✓ \"success\" \"failed\" events status VARCHAR(50)" [ref=e61]:
+            - cell "_source.status" [ref=e62]:
+              - code [ref=e63]: _source.status
+            - cell "string" [ref=e64]
+            - cell [ref=e65]
+            - cell "✓" [ref=e66]
+            - cell "\"success\" \"failed\"" [ref=e67]:
+              - generic [ref=e68]:
+                - generic [ref=e69]: "\"success\""
+                - generic [ref=e70]: "\"failed\""
+            - cell "events" [ref=e71]:
+              - strong [ref=e72]: events
+            - cell "status" [ref=e73]
+            - cell "VARCHAR(50)" [ref=e74]:
+              - code [ref=e75]: VARCHAR(50)
+          - row "_source.user.id number 1 2 3 users id INT" [ref=e76]:
+            - cell "_source.user.id" [ref=e77]:
+              - code [ref=e78]: _source.user.id
+            - cell "number" [ref=e79]
+            - cell [ref=e80]
+            - cell [ref=e81]
+            - cell "1 2 3" [ref=e82]:
+              - generic [ref=e83]:
+                - generic [ref=e84]: "1"
+                - generic [ref=e85]: "2"
+                - generic [ref=e86]: "3"
+            - cell "users" [ref=e87]:
+              - strong [ref=e88]: users
+            - cell "id" [ref=e89]
+            - cell "INT" [ref=e90]:
+              - code [ref=e91]: INT
+          - row "_source.user.name string \"Alice\" \"Bob\" users name VARCHAR(255)" [ref=e92]:
+            - cell "_source.user.name" [ref=e93]:
+              - code [ref=e94]: _source.user.name
+            - cell "string" [ref=e95]
+            - cell [ref=e96]
+            - cell [ref=e97]
+            - cell "\"Alice\" \"Bob\"" [ref=e98]:
+              - generic [ref=e99]:
+                - generic [ref=e100]: "\"Alice\""
+                - generic [ref=e101]: "\"Bob\""
+            - cell "users" [ref=e102]:
+              - strong [ref=e103]: users
+            - cell "name" [ref=e104]
+            - cell "VARCHAR(255)" [ref=e105]:
+              - code [ref=e106]: VARCHAR(255)
+    - generic [ref=e108]:
+      - heading "Choose Table Setup" [level=3] [ref=e109]
+      - generic [ref=e110]:
+        - button "Use Suggested Tables" [ref=e111] [cursor=pointer]
+        - button "Load Existing Tables" [ref=e112] [cursor=pointer]
+        - button "Create Custom Tables" [ref=e113] [cursor=pointer]
+      - generic [ref=e114]:
+        - paragraph [ref=e115]:
+          - text: The analyzer has suggested
+          - strong [ref=e116]: "2"
+          - text: tables based on your JSON structure.
+        - list [ref=e117]:
+          - listitem [ref=e118]:
+            - strong [ref=e119]: events
+            - text: (2 fields)
+          - listitem [ref=e120]:
+            - strong [ref=e121]: users
+            - text: (2 fields)
+        - button "Use These Suggested Tables" [ref=e122] [cursor=pointer]
+    - button "← Back to Analysis" [ref=e123] [cursor=pointer]
+```

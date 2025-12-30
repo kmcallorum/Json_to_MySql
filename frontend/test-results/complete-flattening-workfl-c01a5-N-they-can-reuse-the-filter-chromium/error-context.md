@@ -1,0 +1,92 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - heading "JSON to SQL Flattener" [level=1] [ref=e5]
+  - generic [ref=e6]:
+    - generic [ref=e7]: 1. Analyzing...
+    - generic [ref=e9]: 2. Tables
+    - generic [ref=e11]: 3. Map
+    - generic [ref=e13]: 4. Relations
+    - generic [ref=e15]: 5. Execute
+  - generic [ref=e16]:
+    - heading "JSON to SQL Flattener - Smart Analysis" [level=2] [ref=e17]
+    - generic [ref=e18]:
+      - 'heading "Step 1: Test Database Connection" [level=3] [ref=e19]'
+      - button "Test Connection" [ref=e20] [cursor=pointer]
+      - text: ✓ Connected
+    - generic [ref=e21]:
+      - 'heading "Step 2: Discover Fields" [level=3] [ref=e22]'
+      - generic [ref=e23]:
+        - generic [ref=e24]: "Destination Table Name:"
+        - textbox "e.g., platforms_cicd_data" [ref=e25]: platforms_cicd_data
+        - generic [ref=e26]:
+          - text: "Will read from:"
+          - strong [ref=e27]: platforms_cicd_data_toprocess
+      - button "Discover All Fields & Values" [ref=e28] [cursor=pointer]
+      - generic [ref=e29]: ✓ Discovered 4 fields
+    - generic [ref=e30]:
+      - 'heading "Step 3: Build WHERE Conditions (Optional)" [level=3] [ref=e31]'
+      - generic [ref=e32]:
+        - generic [ref=e33]:
+          - heading "Build WHERE Conditions" [level=3] [ref=e34]
+          - generic [ref=e35]:
+            - generic [ref=e36]:
+              - button "💾 Save Filter Preset" [active] [ref=e37] [cursor=pointer]
+              - button "📂 Load Filter Preset" [ref=e38] [cursor=pointer]
+              - generic [ref=e40]:
+                - heading "Save Filter Preset" [level=3] [ref=e41]
+                - generic [ref=e42]:
+                  - generic [ref=e43]: Preset Name *
+                  - textbox "e.g., pipeline_test_filters" [ref=e44]
+                - generic [ref=e45]:
+                  - generic [ref=e46]: Description
+                  - textbox "Describe this filter..." [ref=e47]
+                - generic [ref=e48]:
+                  - strong [ref=e49]: "Current Filters:"
+                  - text: 1 condition(s)
+                - generic [ref=e50]:
+                  - button "Cancel" [ref=e51] [cursor=pointer]
+                  - button "Save" [disabled] [ref=e52] [cursor=pointer]
+            - button "+ Add Condition" [ref=e53] [cursor=pointer]
+        - generic [ref=e54]:
+          - generic [ref=e55]:
+            - generic [ref=e56]:
+              - generic [ref=e57]: Field
+              - combobox [ref=e58]:
+                - option "-- Select Field --"
+                - option "_source.status" [selected]
+                - option "_source.type"
+                - option "_source.user.id"
+                - option "_source.user.name"
+            - generic [ref=e59]:
+              - generic [ref=e60]: Operator
+              - combobox [ref=e61]:
+                - option "= (equals)" [selected]
+                - option "!= (not equals)"
+                - option "IS NULL"
+                - option "IS NOT NULL"
+                - option "IN (one of)"
+                - option "LIKE (contains)"
+            - generic [ref=e62]:
+              - generic [ref=e63]: Value
+              - combobox [ref=e64]:
+                - option "-- Select Value --" [selected]
+                - option "success"
+                - option "failed"
+                - option "pending"
+            - button "Remove" [ref=e66] [cursor=pointer]
+          - generic [ref=e67]:
+            - strong [ref=e68]: "Info:"
+            - text: 3 unique values, 2 nulls, 100 total records
+        - generic [ref=e69]:
+          - strong [ref=e70]: "SQL Preview:"
+          - generic [ref=e71]: _source.status = ''
+    - generic [ref=e72]:
+      - 'heading "Step 4: Analyze & Generate Table Suggestions" [level=3] [ref=e73]'
+      - generic [ref=e74]:
+        - generic [ref=e75]: "Sample Size:"
+        - spinbutton [ref=e76]: "100"
+        - text: Records to analyze for schema discovery
+      - button "🚀 Analyze & Suggest Tables" [ref=e77] [cursor=pointer]
+```
