@@ -350,171 +350,229 @@ export const StagingWorkflow: React.FC<StagingWorkflowProps> = ({
         )}
 
         {/* Step 2: WHERE Clause (Optional) */}
-        {currentStep === 'where-clause' && (
-          <div>
-            <h3>Step 2: WHERE Conditions (Optional)</h3>
-            <p style={{ color: '#666' }}>
-              Add conditions to filter source data (e.g., milestoneId IS NOT NULL).
-            </p>
+        {currentStep === 'where-clause' && (() => {
+          // Build list of all available columns from source tables
+          const availableColumns: string[] = [];
+          sourceTables.forEach(table => {
+            table.columns?.forEach((col: any) => {
+              availableColumns.push(col.name);
+            });
+          });
+          // Remove duplicates
+          const uniqueColumns = Array.from(new Set(availableColumns)).sort();
 
-            <div style={{ marginBottom: '20px' }}>
-              {whereConditions.map((condition, index) => (
-                <div
-                  key={index}
+          return (
+            <div>
+              <h3>Step 2: WHERE Conditions (Optional)</h3>
+              <p style={{ color: '#666' }}>
+                Add conditions to filter source data (e.g., milestoneId IS NOT NULL).
+              </p>
+
+              {whereConditions.length === 0 && (
+                <p style={{ color: '#666', fontStyle: 'italic', marginBottom: '20px' }}>
+                  No filters applied. Click "Add Condition" to filter your data.
+                </p>
+              )}
+
+              <div style={{ marginBottom: '20px' }}>
+                {whereConditions.map((condition, index) => {
+                  const showValueInput = !['IS NOT NULL', 'IS NULL'].includes(condition.operator);
+
+                  return (
+                    <div
+                      key={index}
+                      style={{
+                        padding: '15px',
+                        marginBottom: '10px',
+                        backgroundColor: 'white',
+                        border: '1px solid #dee2e6',
+                        borderRadius: '4px',
+                      }}
+                    >
+                      <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+                        <div style={{ flex: '1 1 200px' }}>
+                          <label style={{ display: 'block', fontSize: '12px', marginBottom: '5px', fontWeight: 'bold' }}>
+                            Field
+                          </label>
+                          <select
+                            value={condition.field}
+                            onChange={e => {
+                              const updated = [...whereConditions];
+                              updated[index].field = e.target.value;
+                              setWhereConditions(updated);
+                            }}
+                            style={{
+                              width: '100%',
+                              padding: '8px',
+                              border: '1px solid #ccc',
+                              borderRadius: '4px',
+                            }}
+                          >
+                            <option value="">-- Select Field --</option>
+                            {uniqueColumns.map(col => (
+                              <option key={col} value={col}>
+                                {col}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div style={{ flex: '0 0 150px' }}>
+                          <label style={{ display: 'block', fontSize: '12px', marginBottom: '5px', fontWeight: 'bold' }}>
+                            Operator
+                          </label>
+                          <select
+                            value={condition.operator}
+                            onChange={e => {
+                              const updated = [...whereConditions];
+                              updated[index].operator = e.target.value;
+                              if (['IS NOT NULL', 'IS NULL'].includes(e.target.value)) {
+                                updated[index].value = undefined;
+                              }
+                              setWhereConditions(updated);
+                            }}
+                            style={{
+                              width: '100%',
+                              padding: '8px',
+                              border: '1px solid #ccc',
+                              borderRadius: '4px',
+                            }}
+                          >
+                            <option value="=">= (equals)</option>
+                            <option value="!=">!= (not equals)</option>
+                            <option value=">"> &gt; (greater than)</option>
+                            <option value="<">&lt; (less than)</option>
+                            <option value="IS NOT NULL">IS NOT NULL</option>
+                            <option value="IS NULL">IS NULL</option>
+                          </select>
+                        </div>
+
+                        {showValueInput && (
+                          <div style={{ flex: '1 1 200px' }}>
+                            <label style={{ display: 'block', fontSize: '12px', marginBottom: '5px', fontWeight: 'bold' }}>
+                              Value
+                            </label>
+                            <input
+                              type="text"
+                              placeholder="Enter value..."
+                              value={condition.value || ''}
+                              onChange={e => {
+                                const updated = [...whereConditions];
+                                updated[index].value = e.target.value;
+                                setWhereConditions(updated);
+                              }}
+                              style={{
+                                width: '100%',
+                                padding: '8px',
+                                border: '1px solid #ccc',
+                                borderRadius: '4px',
+                              }}
+                            />
+                          </div>
+                        )}
+
+                        <div style={{ flex: '0 0 auto' }}>
+                          <label style={{ display: 'block', fontSize: '12px', marginBottom: '5px', visibility: 'hidden' }}>
+                            Action
+                          </label>
+                          <button
+                            onClick={() => {
+                              setWhereConditions(whereConditions.filter((_, i) => i !== index));
+                            }}
+                            style={{
+                              padding: '8px 16px',
+                              backgroundColor: '#dc3545',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                <button
+                  onClick={() => {
+                    setWhereConditions([
+                      ...whereConditions,
+                      { field: '', operator: 'IS NOT NULL', value: '' },
+                    ]);
+                  }}
                   style={{
-                    display: 'flex',
-                    gap: '10px',
-                    marginBottom: '10px',
-                    padding: '10px',
-                    backgroundColor: '#f8f9fa',
+                    padding: '10px 20px',
+                    backgroundColor: '#28a745',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontWeight: 'bold',
+                  }}
+                >
+                  + Add Condition
+                </button>
+              </div>
+
+              {whereConditions.length > 0 && (
+                <div
+                  style={{
+                    marginBottom: '20px',
+                    padding: '15px',
+                    backgroundColor: '#e7f3ff',
                     borderRadius: '4px',
                   }}
                 >
-                  <input
-                    type="text"
-                    placeholder="Field name (e.g., milestoneId)"
-                    value={condition.field}
-                    onChange={e => {
-                      const updated = [...whereConditions];
-                      updated[index].field = e.target.value;
-                      setWhereConditions(updated);
-                    }}
-                    style={{
-                      flex: 1,
-                      padding: '8px',
-                      border: '1px solid #ccc',
-                      borderRadius: '4px',
-                    }}
-                  />
-                  <select
-                    value={condition.operator}
-                    onChange={e => {
-                      const updated = [...whereConditions];
-                      updated[index].operator = e.target.value;
-                      setWhereConditions(updated);
-                    }}
-                    style={{
-                      padding: '8px',
-                      border: '1px solid #ccc',
-                      borderRadius: '4px',
-                    }}
-                  >
-                    <option value="=">= (equals)</option>
-                    <option value="!=">!= (not equals)</option>
-                    <option value=">"> &gt; (greater than)</option>
-                    <option value="<">&lt; (less than)</option>
-                    <option value="IS NOT NULL">IS NOT NULL</option>
-                    <option value="IS NULL">IS NULL</option>
-                  </select>
-                  {!['IS NOT NULL', 'IS NULL'].includes(condition.operator) && (
-                    <input
-                      type="text"
-                      placeholder="Value"
-                      value={condition.value || ''}
-                      onChange={e => {
-                        const updated = [...whereConditions];
-                        updated[index].value = e.target.value;
-                        setWhereConditions(updated);
-                      }}
-                      style={{
-                        flex: 1,
-                        padding: '8px',
-                        border: '1px solid #ccc',
-                        borderRadius: '4px',
-                      }}
-                    />
-                  )}
-                  <button
-                    onClick={() => {
-                      setWhereConditions(whereConditions.filter((_, i) => i !== index));
-                    }}
-                    style={{
-                      padding: '8px 16px',
-                      backgroundColor: '#dc3545',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    Remove
-                  </button>
+                  <strong>SQL Preview:</strong>
+                  <pre style={{ margin: '5px 0 0 0', fontSize: '13px' }}>
+                    {whereConditions
+                      .map((c, i) => {
+                        let clause = `${i > 0 ? 'AND ' : ''}${c.field} ${c.operator}`;
+                        if (c.operator === '=' || c.operator === '!=' || c.operator === '>' || c.operator === '<') {
+                          clause += ` '${c.value}'`;
+                        }
+                        return clause;
+                      })
+                      .join('\n')}
+                  </pre>
                 </div>
-              ))}
+              )}
 
-              <button
-                onClick={() => {
-                  setWhereConditions([
-                    ...whereConditions,
-                    { field: '', operator: 'IS NOT NULL', value: '' },
-                  ]);
-                }}
-                style={{
-                  padding: '10px 20px',
-                  backgroundColor: '#007bff',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-              >
-                + Add Condition
-              </button>
-            </div>
-
-            {whereConditions.length > 0 && (
-              <div
-                style={{
-                  marginBottom: '20px',
-                  padding: '15px',
-                  backgroundColor: '#d4edda',
-                  borderRadius: '4px',
-                }}
-              >
-                <strong>WHERE Clause Preview:</strong>
-                <div style={{ marginTop: '10px', fontFamily: 'monospace', fontSize: '14px' }}>
-                  {whereConditions
-                    .map(c =>
-                      ['IS NOT NULL', 'IS NULL'].includes(c.operator)
-                        ? `${c.field} ${c.operator}`
-                        : `${c.field} ${c.operator} '${c.value}'`
-                    )
-                    .join(' AND ')}
-                </div>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  onClick={handleBack}
+                  style={{
+                    padding: '10px 20px',
+                    backgroundColor: '#6c757d',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  ← Back
+                </button>
+                <button
+                  onClick={handleWhereClauseComplete}
+                  style={{
+                    padding: '12px 24px',
+                    backgroundColor: '#28a745',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontWeight: 'bold',
+                  }}
+                >
+                  Continue to Staging Tables →
+                </button>
               </div>
-            )}
-
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button
-                onClick={handleBack}
-                style={{
-                  padding: '10px 20px',
-                  backgroundColor: '#6c757d',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                }}
-              >
-                ← Back
-              </button>
-              <button
-                onClick={handleWhereClauseComplete}
-                style={{
-                  padding: '12px 24px',
-                  backgroundColor: '#28a745',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontWeight: 'bold',
-                }}
-              >
-                Continue to Staging Tables →
-              </button>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Step 3: Select Staging Tables */}
         {currentStep === 'select-staging' && (

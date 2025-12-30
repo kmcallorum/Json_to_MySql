@@ -18,15 +18,28 @@ export const StagingColumnMapper = ({ sourceTables, stagingTables, onMappingsCha
             targetTable,
             targetColumn,
         };
-        const updated = [
-            ...mappings.filter(m => !(m.sourceTable === draggedColumn.tableName && m.sourceColumn === draggedColumn.columnName)),
-            newMapping,
-        ];
+        // Check if this exact mapping already exists
+        const exists = mappings.some(m => m.sourceTable === draggedColumn.tableName &&
+            m.sourceColumn === draggedColumn.columnName &&
+            m.targetTable === targetTable &&
+            m.targetColumn === targetColumn);
+        if (exists) {
+            alert('This mapping already exists');
+            setDraggedColumn(null);
+            return;
+        }
+        // Allow multiple mappings from the same source column
+        const updated = [...mappings, newMapping];
         setMappings(updated);
         onMappingsChange(updated);
         setDraggedColumn(null);
     };
-    const removeMapping = (sourceTable, sourceColumn) => {
+    const removeMapping = (sourceTable, sourceColumn, targetTable, targetColumn) => {
+        const updated = mappings.filter(m => !(m.sourceTable === sourceTable && m.sourceColumn === sourceColumn && m.targetTable === targetTable && m.targetColumn === targetColumn));
+        setMappings(updated);
+        onMappingsChange(updated);
+    };
+    const removeAllMappings = (sourceTable, sourceColumn) => {
         const updated = mappings.filter(m => !(m.sourceTable === sourceTable && m.sourceColumn === sourceColumn));
         setMappings(updated);
         onMappingsChange(updated);
@@ -34,8 +47,8 @@ export const StagingColumnMapper = ({ sourceTables, stagingTables, onMappingsCha
     const isMapped = (sourceTable, sourceColumn) => {
         return mappings.some(m => m.sourceTable === sourceTable && m.sourceColumn === sourceColumn);
     };
-    const getMappingFor = (sourceTable, sourceColumn) => {
-        return mappings.find(m => m.sourceTable === sourceTable && m.sourceColumn === sourceColumn);
+    const getMappingsFor = (sourceTable, sourceColumn) => {
+        return mappings.filter(m => m.sourceTable === sourceTable && m.sourceColumn === sourceColumn);
     };
     return (_jsxs("div", { children: [_jsxs("div", { style: { marginBottom: '15px', padding: '10px', backgroundColor: '#d4edda', borderRadius: '4px' }, children: [_jsxs("strong", { children: ["\u2713 ", mappings.length, " column(s) mapped"] }), ' • ', sourceTables.reduce((sum, t) => sum + (t.columns?.length || 0), 0) - mappings.length, " remaining"] }), _jsxs("div", { style: { display: 'flex', gap: '20px' }, children: [_jsxs("div", { style: { flex: '1', backgroundColor: '#f8f9fa', padding: '15px', borderRadius: '8px' }, children: [_jsx("h3", { children: "Source Tables & Columns" }), _jsx("div", { style: { fontSize: '12px', color: '#666', marginBottom: '10px' }, children: "Drag columns to staging tables \u2192" }), sourceTables.map(table => (_jsxs("div", { style: { marginBottom: '20px' }, children: [_jsx("h4", { style: {
                                             backgroundColor: '#007bff',
@@ -45,7 +58,7 @@ export const StagingColumnMapper = ({ sourceTables, stagingTables, onMappingsCha
                                             fontSize: '14px',
                                             margin: '0 0 10px 0',
                                         }, children: table.tableName }), _jsx("div", { style: { maxHeight: '400px', overflowY: 'auto' }, children: table.columns?.map((col) => {
-                                            const mapping = getMappingFor(table.tableName, col.name);
+                                            const columnMappings = getMappingsFor(table.tableName, col.name);
                                             return (_jsxs("div", { draggable: true, onDragStart: () => handleDragStart(table.tableName, col.name, col.type), style: {
                                                     padding: '10px',
                                                     marginBottom: '8px',
@@ -53,16 +66,23 @@ export const StagingColumnMapper = ({ sourceTables, stagingTables, onMappingsCha
                                                     border: '1px solid #ddd',
                                                     borderRadius: '4px',
                                                     cursor: 'move',
-                                                }, children: [_jsxs("div", { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' }, children: [_jsxs("div", { children: [_jsx("div", { style: { fontWeight: 'bold' }, children: col.name }), _jsx("div", { style: { fontSize: '12px', color: '#666' }, children: col.type })] }), mapping && (_jsxs("div", { style: { fontSize: '12px', color: '#28a745' }, children: ["\u2192 ", mapping.targetTable, ".", mapping.targetColumn] }))] }), mapping && (_jsx("button", { onClick: () => removeMapping(table.tableName, col.name), style: {
-                                                            marginTop: '5px',
-                                                            padding: '4px 8px',
-                                                            backgroundColor: '#dc3545',
-                                                            color: 'white',
-                                                            border: 'none',
-                                                            borderRadius: '3px',
-                                                            cursor: 'pointer',
-                                                            fontSize: '11px',
-                                                        }, children: "Remove Mapping" }))] }, col.name));
+                                                }, children: [_jsx("div", { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' }, children: _jsxs("div", { children: [_jsx("div", { style: { fontWeight: 'bold' }, children: col.name }), _jsx("div", { style: { fontSize: '12px', color: '#666' }, children: col.type })] }) }), columnMappings.length > 0 && (_jsx("div", { style: { marginTop: '8px' }, children: columnMappings.map((mapping, idx) => (_jsxs("div", { style: {
+                                                                display: 'flex',
+                                                                justifyContent: 'space-between',
+                                                                alignItems: 'center',
+                                                                marginTop: idx > 0 ? '4px' : 0,
+                                                                padding: '4px 8px',
+                                                                backgroundColor: '#e7f3e7',
+                                                                borderRadius: '3px',
+                                                            }, children: [_jsxs("div", { style: { fontSize: '12px', color: '#28a745' }, children: ["\u2192 ", mapping.targetTable, ".", mapping.targetColumn] }), _jsx("button", { onClick: () => removeMapping(table.tableName, col.name, mapping.targetTable, mapping.targetColumn), style: {
+                                                                        padding: '2px 6px',
+                                                                        backgroundColor: '#dc3545',
+                                                                        color: 'white',
+                                                                        border: 'none',
+                                                                        borderRadius: '2px',
+                                                                        cursor: 'pointer',
+                                                                        fontSize: '10px',
+                                                                    }, children: "\u2715" })] }, idx))) }))] }, col.name));
                                         }) })] }, table.tableName)))] }), _jsxs("div", { style: { flex: '1', backgroundColor: '#f8f9fa', padding: '15px', borderRadius: '8px' }, children: [_jsx("h3", { children: "Staging Tables & Columns" }), _jsx("div", { style: { fontSize: '12px', color: '#666', marginBottom: '10px' }, children: "Drop columns here \u2190" }), stagingTables.map(table => (_jsxs("div", { style: { marginBottom: '20px' }, children: [_jsx("h4", { style: {
                                             backgroundColor: '#28a745',
                                             color: 'white',
