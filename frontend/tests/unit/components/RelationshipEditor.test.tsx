@@ -1,10 +1,11 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import { RelationshipEditor } from '../../../src/components/mapping/RelationshipEditor';
 
 // Mock window.alert and window.confirm
-global.alert = jest.fn();
-global.confirm = jest.fn();
+global.alert = jest.fn() as any;
+global.confirm = jest.fn() as any;
 
 describe('RelationshipEditor', () => {
   const mockTables = [

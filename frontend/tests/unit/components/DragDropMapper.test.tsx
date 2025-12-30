@@ -1,5 +1,6 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import { DragDropMapper } from '../../../src/components/mapping/DragDropMapper';
 import { api } from '../../../src/services/api';
 
@@ -7,8 +8,8 @@ import { api } from '../../../src/services/api';
 jest.mock('../../../src/services/api');
 
 // Mock window.confirm and window.alert
-global.confirm = jest.fn();
-global.alert = jest.fn();
+global.confirm = jest.fn() as any;
+global.alert = jest.fn() as any;
 
 describe('DragDropMapper', () => {
   const mockFields = [

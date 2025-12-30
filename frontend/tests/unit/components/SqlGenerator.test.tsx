@@ -1,5 +1,6 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import { SqlGenerator } from '../../../src/components/mapping/SqlGenerator';
 import { api } from '../../../src/services/api';
 
@@ -7,8 +8,8 @@ import { api } from '../../../src/services/api';
 jest.mock('../../../src/services/api');
 
 // Mock window functions
-global.alert = jest.fn();
-global.confirm = jest.fn();
+global.alert = jest.fn() as any;
+global.confirm = jest.fn() as any;
 
 // Mock clipboard API
 Object.assign(navigator, {
@@ -47,13 +48,15 @@ describe('SqlGenerator', () => {
       sourcePath: 'user.name',
       targetTable: 'users',
       targetColumn: 'name',
-      dataType: 'VARCHAR(255)'
+      dataType: 'VARCHAR(255)',
+      isArray: false
     },
     {
       sourcePath: 'user.email',
       targetTable: 'users',
       targetColumn: 'email',
-      dataType: 'VARCHAR(255)'
+      dataType: 'VARCHAR(255)',
+      isArray: false
     }
   ];
 

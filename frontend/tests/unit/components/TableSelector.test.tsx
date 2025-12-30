@@ -1,5 +1,6 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import { TableSelector } from '../../../src/components/mapping/TableSelector';
 import { api } from '../../../src/services/api';
 
@@ -7,8 +8,8 @@ import { api } from '../../../src/services/api';
 jest.mock('../../../src/services/api');
 
 // Mock window functions
-global.alert = jest.fn();
-global.prompt = jest.fn();
+global.alert = jest.fn() as any;
+global.prompt = jest.fn() as any;
 
 describe('TableSelector', () => {
   const mockFields = [
@@ -141,7 +142,7 @@ describe('TableSelector', () => {
     fireEvent.click(useButton);
 
     expect(mockOnTablesSelected).toHaveBeenCalled();
-    const tables = mockOnTablesSelected.mock.calls[0][0];
+    const tables = mockOnTablesSelected.mock.calls[0][0] as any;
     expect(tables).toHaveLength(2);
     expect(tables[0].name).toBe('users');
     expect(tables[0].isNew).toBe(true);
@@ -627,7 +628,7 @@ describe('TableSelector', () => {
     const useButton = screen.getByText('Use These Suggested Tables');
     fireEvent.click(useButton);
 
-    const tables = mockOnTablesSelected.mock.calls[0][0];
+    const tables = mockOnTablesSelected.mock.calls[0][0] as any;
     expect(tables).toHaveLength(2); // Duplicates removed
   });
 });
