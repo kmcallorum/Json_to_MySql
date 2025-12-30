@@ -1,7 +1,7 @@
 # JSON-to-SQL Flattener
 
-[![CI](https://github.com/YOUR_USERNAME/Json-Flattener/workflows/CI/badge.svg)](https://github.com/YOUR_USERNAME/Json-Flattener/actions)
-[![codecov](https://codecov.io/gh/YOUR_USERNAME/Json-Flattener/branch/main/graph/badge.svg)](https://codecov.io/gh/YOUR_USERNAME/Json-Flattener)
+[![CI](https://github.com/kmcallorum/Json_to_MySql/workflows/CI/badge.svg)](https://github.com/kmcallorum/Json_to_MySql/actions)
+[![codecov](https://codecov.io/gh/kmcallorum/Json_to_MySql/branch/main/graph/badge.svg)](https://codecov.io/gh/kmcallorum/Json_to_MySql)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org)
 
