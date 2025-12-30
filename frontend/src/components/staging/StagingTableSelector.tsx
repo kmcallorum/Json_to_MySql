@@ -17,7 +17,6 @@ export const StagingTableSelector: React.FC<StagingTableSelectorProps> = ({
 
   useEffect(() => {
     loadAvailableTables();
-    autoSuggestTables();
   }, []);
 
   const loadAvailableTables = async () => {
@@ -26,6 +25,8 @@ export const StagingTableSelector: React.FC<StagingTableSelectorProps> = ({
       const result = await api.getTableList();
       if (result.success) {
         setAvailableTables(result.tables);
+        // After loading available tables, auto-suggest
+        await autoSuggestTables(result.tables);
       }
     } catch (error) {
       console.error('Error loading tables:', error);
@@ -34,13 +35,36 @@ export const StagingTableSelector: React.FC<StagingTableSelectorProps> = ({
     }
   };
 
-  const autoSuggestTables = () => {
+  const autoSuggestTables = async (existingTables: string[]) => {
     // Auto-suggest staging tables based on source tables
-    const suggested = sourceTableNames.map(name => ({
-      name: `staging_${name}`,
-      isNew: true,
-      columns: [],
-    }));
+    const suggested: any[] = [];
+
+    for (const sourceName of sourceTableNames) {
+      const stagingName = `staging_${sourceName}`;
+
+      // Check if this staging table already exists
+      if (existingTables.includes(stagingName)) {
+        // Load the existing table structure
+        try {
+          const result = await api.getTableStructures([stagingName]);
+          if (result.success && result.tables.length > 0) {
+            suggested.push({ ...result.tables[0], isNew: false });
+          }
+        } catch (error) {
+          console.error(`Error loading ${stagingName}:`, error);
+        }
+      } else {
+        // Create a new table suggestion
+        suggested.push({
+          name: stagingName,
+          isNew: true,
+          columns: [
+            { name: 'id', type: 'INT', isPrimaryKey: true, nullable: false },
+          ],
+        });
+      }
+    }
+
     setSelectedTables(suggested);
   };
 

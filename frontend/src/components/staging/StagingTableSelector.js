@@ -8,7 +8,6 @@ export const StagingTableSelector = ({ sourceTableNames, onTablesSelected, }) =>
     const [isLoadingTables, setIsLoadingTables] = useState(true);
     useEffect(() => {
         loadAvailableTables();
-        autoSuggestTables();
     }, []);
     const loadAvailableTables = async () => {
         setIsLoadingTables(true);
@@ -16,6 +15,8 @@ export const StagingTableSelector = ({ sourceTableNames, onTablesSelected, }) =>
             const result = await api.getTableList();
             if (result.success) {
                 setAvailableTables(result.tables);
+                // After loading available tables, auto-suggest
+                await autoSuggestTables(result.tables);
             }
         }
         catch (error) {
@@ -25,13 +26,35 @@ export const StagingTableSelector = ({ sourceTableNames, onTablesSelected, }) =>
             setIsLoadingTables(false);
         }
     };
-    const autoSuggestTables = () => {
+    const autoSuggestTables = async (existingTables) => {
         // Auto-suggest staging tables based on source tables
-        const suggested = sourceTableNames.map(name => ({
-            name: `staging_${name}`,
-            isNew: true,
-            columns: [],
-        }));
+        const suggested = [];
+        for (const sourceName of sourceTableNames) {
+            const stagingName = `staging_${sourceName}`;
+            // Check if this staging table already exists
+            if (existingTables.includes(stagingName)) {
+                // Load the existing table structure
+                try {
+                    const result = await api.getTableStructures([stagingName]);
+                    if (result.success && result.tables.length > 0) {
+                        suggested.push({ ...result.tables[0], isNew: false });
+                    }
+                }
+                catch (error) {
+                    console.error(`Error loading ${stagingName}:`, error);
+                }
+            }
+            else {
+                // Create a new table suggestion
+                suggested.push({
+                    name: stagingName,
+                    isNew: true,
+                    columns: [
+                        { name: 'id', type: 'INT', isPrimaryKey: true, nullable: false },
+                    ],
+                });
+            }
+        }
         setSelectedTables(suggested);
     };
     const handleSelectExisting = async (tableName) => {
