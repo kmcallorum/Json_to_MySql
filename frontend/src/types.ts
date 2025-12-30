@@ -28,6 +28,9 @@ export interface FieldAnalysis {
 export interface SchemaAnalysis {
   fields: FieldAnalysis[];
   totalRecords: number;
+  totalDocuments?: number;
+  nestedStructures?: any[];
+  analyzedAt?: Date;
 }
 
 export interface ColumnDefinition {
