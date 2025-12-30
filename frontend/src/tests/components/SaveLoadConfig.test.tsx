@@ -72,9 +72,9 @@ describe('SaveLoadConfig Component', () => {
     fireEvent.click(screen.getByText(/Save Configuration/i));
 
     const saveButton = screen.getByRole('button', { name: /^Save$/i });
-    fireEvent.click(saveButton);
 
-    expect(global.alert).toHaveBeenCalledWith('Please enter a configuration name');
+    // Button should be disabled when name is empty
+    expect(saveButton).toBeDisabled();
   });
 
   it('should save configuration successfully', async () => {

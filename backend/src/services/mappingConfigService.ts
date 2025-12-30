@@ -1,3 +1,4 @@
+import { injectable } from 'tsyringe';
 import { DatabaseConnection } from '../database/connection.js';
 
 export interface MappingConfig {
@@ -14,6 +15,7 @@ export interface MappingConfig {
   updatedAt?: Date;
 }
 
+@injectable()
 export class MappingConfigService {
   constructor(private db: DatabaseConnection) {}
 

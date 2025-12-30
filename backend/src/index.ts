@@ -1,3 +1,5 @@
+import 'reflect-metadata';
+import './container.js'; // Initialize DI container
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';

@@ -14,9 +14,9 @@ describe('JsonAnalyzerComponent', () => {
   it('should render all main sections', () => {
     render(<JsonAnalyzerComponent onAnalysisComplete={mockOnAnalysisComplete} />);
 
-    expect(screen.getByText(/Step 1: Test Connection/i)).toBeInTheDocument();
+    expect(screen.getByText(/Step 1: Test Database Connection/i)).toBeInTheDocument();
     expect(screen.getByText(/Step 2: Discover Fields/i)).toBeInTheDocument();
-    expect(screen.getByText(/Step 3: Build WHERE Conditions/i)).toBeInTheDocument();
+    // Step 3 only appears after fields are discovered
   });
 
   it('should have default base table name', () => {
@@ -49,7 +49,7 @@ describe('JsonAnalyzerComponent', () => {
 
     render(<JsonAnalyzerComponent onAnalysisComplete={mockOnAnalysisComplete} />);
 
-    const discoverButton = screen.getByText(/Discover Fields/i);
+    const discoverButton = screen.getByText(/Discover All Fields & Values/i);
     fireEvent.click(discoverButton);
 
     await waitFor(() => {
@@ -68,7 +68,7 @@ describe('JsonAnalyzerComponent', () => {
 
     render(<JsonAnalyzerComponent onAnalysisComplete={mockOnAnalysisComplete} />);
 
-    fireEvent.click(screen.getByText(/Discover Fields/i));
+    fireEvent.click(screen.getByText(/Discover All Fields & Values/i));
 
     await waitFor(() => {
       expect(screen.getByText(/Discovered 2 fields/i)).toBeInTheDocument();
@@ -111,7 +111,7 @@ describe('JsonAnalyzerComponent', () => {
     render(<JsonAnalyzerComponent onAnalysisComplete={mockOnAnalysisComplete} />);
 
     // Discover fields first
-    fireEvent.click(screen.getByText(/Discover Fields/i));
+    fireEvent.click(screen.getByText(/Discover All Fields & Values/i));
 
     await waitFor(() => {
       expect(screen.getByText(/Analyze & Suggest Tables/i)).toBeInTheDocument();
@@ -149,18 +149,27 @@ describe('JsonAnalyzerComponent', () => {
     expect(input).toHaveValue('new_table');
   });
 
-  it('should update sample size', () => {
+  it('should update sample size', async () => {
+    // Mock discover fields to show Step 4
+    (api.discoverFields as jest.Mock).mockResolvedValue({
+      success: true,
+      fields: [{ path: 'test.field', uniqueValues: [], nullCount: 0, totalCount: 100 }]
+    });
+
     render(<JsonAnalyzerComponent onAnalysisComplete={mockOnAnalysisComplete} />);
 
-    // Find sample size input in Step 4
-    const sampleInputs = screen.getAllByRole('spinbutton');
-    const sampleSizeInput = sampleInputs.find(input =>
-      (input as HTMLInputElement).value === '100'
-    );
+    // First discover fields to make Step 4 appear
+    fireEvent.click(screen.getByText(/Discover All Fields & Values/i));
 
-    if (sampleSizeInput) {
-      fireEvent.change(sampleSizeInput, { target: { value: '500' } });
-      expect(sampleSizeInput).toHaveValue(500);
-    }
+    await waitFor(() => {
+      expect(screen.getByText(/Step 4:/i)).toBeInTheDocument();
+    });
+
+    // Now find sample size input in Step 4
+    const sampleSizeInput = screen.getByRole('spinbutton');
+    expect(sampleSizeInput).toHaveValue(100);
+
+    fireEvent.change(sampleSizeInput, { target: { value: '500' } });
+    expect(sampleSizeInput).toHaveValue(500);
   });
 });

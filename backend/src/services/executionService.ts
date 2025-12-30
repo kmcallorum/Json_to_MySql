@@ -1,3 +1,4 @@
+import { injectable } from 'tsyringe';
 import { DatabaseConnection } from '../database/connection.js';
 import mysql from 'mysql2/promise';
 import { RelationshipService, TableRelationship } from './relationshipService.js';
@@ -9,6 +10,7 @@ export interface ExecutionResult {
   errors: string[];
 }
 
+@injectable()
 export class ExecutionService {
   constructor(private db: DatabaseConnection) {}
 

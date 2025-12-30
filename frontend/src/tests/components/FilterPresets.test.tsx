@@ -105,8 +105,6 @@ describe('FilterPresets Component', () => {
   });
 
   it('should show error when saving without name', () => {
-    global.alert = jest.fn();
-
     render(
       <FilterPresets
         baseTableName="test_table"
@@ -116,9 +114,11 @@ describe('FilterPresets Component', () => {
     );
 
     fireEvent.click(screen.getByText(/Save Filter Preset/i));
-    fireEvent.click(screen.getByText('Save'));
 
-    expect(global.alert).toHaveBeenCalledWith('Please enter a preset name');
+    const saveButton = screen.getByText('Save');
+
+    // Button should be disabled when name is empty
+    expect(saveButton).toBeDisabled();
   });
 
   it('should load and display presets', async () => {

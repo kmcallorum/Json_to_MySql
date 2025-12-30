@@ -143,5 +143,36 @@ describe('RelationshipService', () => {
 
       expect(sorted).toEqual([]);
     });
+
+    it('should handle relationships with missing tables', () => {
+      const tableNames = ['table1', 'table2'];
+      const relationships = [
+        // Relationship where child references parent not in tableNames
+        { parentTable: 'table3', childTable: 'table1', foreignKeyColumn: 'fk', parentKeyColumn: 'id' }
+      ];
+
+      // Should still return all tables even if relationship references missing table
+      const sorted = RelationshipService.getInsertOrder(tableNames, relationships);
+
+      expect(sorted).toHaveLength(2);
+      expect(sorted).toContain('table1');
+      expect(sorted).toContain('table2');
+    });
+
+    it('should handle mixed scenarios with partial relationships', () => {
+      const tableNames = ['a', 'b', 'c'];
+      const relationships = [
+        { parentTable: 'a', childTable: 'd', foreignKeyColumn: 'fk', parentKeyColumn: 'id' },  // d not in list
+        { parentTable: 'x', childTable: 'b', foreignKeyColumn: 'fk2', parentKeyColumn: 'id' }  // x not in list
+      ];
+
+      // Should handle gracefully and return all tables
+      const sorted = RelationshipService.getInsertOrder(tableNames, relationships);
+
+      expect(sorted).toHaveLength(3);
+      expect(sorted).toContain('a');
+      expect(sorted).toContain('b');
+      expect(sorted).toContain('c');
+    });
   });
 });

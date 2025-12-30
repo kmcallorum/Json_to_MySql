@@ -1,26 +1,14 @@
 import express from 'express';
+import { container } from 'tsyringe';
 import { MappingConfigService } from '../services/mappingConfigService.js';
 import { ExecutionService } from '../services/executionService.js';
-import { DatabaseConnection } from '../database/connection.js';
 
 const router = express.Router();
-
-// Get database connection
-function getDb() {
-  return new DatabaseConnection({
-    host: process.env.DB_HOST || 'localhost',
-    port: parseInt(process.env.DB_PORT || '3306'),
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || 'root',
-    database: process.env.DB_NAME || 'test_json'
-  });
-}
 
 // Save mapping configuration
 router.post('/save', async (req, res) => {
   try {
-    const db = getDb();
-    const service = new MappingConfigService(db);
+    const service = container.resolve(MappingConfigService);
 
     const result = await service.saveConfig(req.body);
     res.json({ success: true, config: result });
@@ -33,8 +21,7 @@ router.post('/save', async (req, res) => {
 // Get all mapping configurations
 router.get('/list', async (req, res) => {
   try {
-    const db = getDb();
-    const service = new MappingConfigService(db);
+    const service = container.resolve(MappingConfigService);
 
     const configs = await service.listConfigs();
     res.json({ success: true, configs });
@@ -47,8 +34,7 @@ router.get('/list', async (req, res) => {
 // Get mapping config by name
 router.get('/load/:name', async (req, res) => {
   try {
-    const db = getDb();
-    const service = new MappingConfigService(db);
+    const service = container.resolve(MappingConfigService);
 
     const config = await service.loadConfig(req.params.name);
 
@@ -66,8 +52,7 @@ router.get('/load/:name', async (req, res) => {
 // Delete mapping configuration
 router.delete('/:name', async (req, res) => {
   try {
-    const db = getDb();
-    const service = new MappingConfigService(db);
+    const service = container.resolve(MappingConfigService);
 
     await service.deleteConfig(req.params.name);
     res.json({ success: true, message: 'Config deleted successfully' });
@@ -80,8 +65,7 @@ router.delete('/:name', async (req, res) => {
 // Execute flattening
 router.post('/execute', async (req, res) => {
   try {
-    const db = getDb();
-    const executionService = new ExecutionService(db);
+    const executionService = container.resolve(ExecutionService);
     
     const {
       baseTableName,

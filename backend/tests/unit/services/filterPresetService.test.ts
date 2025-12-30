@@ -64,7 +64,8 @@ describe('FilterPresetService', () => {
 
       const result = await service.savePreset('test_preset', 'test_table', []);
 
-      expect(result.description).toBeUndefined();
+      // Database returns null for NULL columns
+      expect(result.description).toBeNull();
     });
   });
 
@@ -152,9 +153,28 @@ describe('FilterPresetService', () => {
       const result = await service.loadPreset('test_preset');
 
       expect(result?.whereConditions).toEqual([]);
-      expect(consoleSpy).toHaveBeenCalled();
+        expect(consoleSpy).toHaveBeenCalled();
 
       consoleSpy.mockRestore();
+    });
+
+    it('should handle non-standard types in where_conditions', async () => {
+      const mockRow = {
+        id: 1,
+        name: 'test_preset',
+        description: 'Test',
+        base_table_name: 'test_table',
+        where_conditions: 123,  // Number instead of string/object/array
+        created_at: new Date(),
+        updated_at: new Date()
+      };
+
+      mockDb.query.mockResolvedValue([mockRow]);
+
+      const result = await service.loadPreset('test_preset');
+
+      // Should fallback to empty array for non-standard types
+      expect(result?.whereConditions).toEqual([]);
     });
   });
 

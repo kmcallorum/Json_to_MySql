@@ -1,3 +1,4 @@
+import { injectable } from 'tsyringe';
 import { DatabaseConnection } from '../database/connection.js';
 
 export interface FilterPreset {
@@ -10,6 +11,7 @@ export interface FilterPreset {
   updatedAt?: Date;
 }
 
+@injectable()
 export class FilterPresetService {
   constructor(private db: DatabaseConnection) {}
 

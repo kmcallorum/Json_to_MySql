@@ -85,7 +85,41 @@ describe('MappingConfigService', () => {
       const result = await service.saveConfig(config);
 
       expect(result.name).toBe('minimal_config');
-      expect(result.description).toBeUndefined();
+      // Database returns null for NULL columns
+      expect(result.description).toBeNull();
+    });
+
+    it('should handle config without whereConditions', async () => {
+      const config: any = {
+        name: 'no_where_config',
+        baseTableName: 'test_table',
+        tables: [],
+        mappings: []
+        // whereConditions is undefined - will be handled by || []
+      };
+
+      const mockSavedConfig = {
+        ...config,
+        id: 1,
+        description: null,
+        base_table_name: 'test_table',
+        where_conditions: '[]',  // Should default to []
+        tables: '[]',
+        mappings: '[]',
+        fields: '[]',
+        relationships: '[]',
+        created_at: new Date(),
+        updated_at: new Date()
+      };
+
+      mockDb.query
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([mockSavedConfig]);
+
+      const result = await service.saveConfig(config);
+
+      expect(result.name).toBe('no_where_config');
+      expect(result.whereConditions).toEqual([]);
     });
   });
 
@@ -155,7 +189,7 @@ describe('MappingConfigService', () => {
         base_table_name: 'test_table',
         where_conditions: 'invalid{json',
         tables: 'invalid{json',
-        mappings: '[valid json]',
+        mappings: '["valid"]',
         fields: null,
         relationships: undefined,
         created_at: new Date(),
@@ -170,7 +204,8 @@ describe('MappingConfigService', () => {
       expect(result?.whereConditions).toBe('invalid{json');
       expect(result?.tables).toBe('invalid{json');
       // Valid JSON string should be parsed to array
-      expect(result?.mappings).toBe('[valid json]'); // parseJSON returns string as-is if parse fails
+      expect(Array.isArray(result?.mappings)).toBe(true);
+      expect(result?.mappings).toEqual(['valid']);
       // Null/undefined should stay as-is
       expect(result?.fields).toBeNull();
       expect(result?.relationships).toBeUndefined();

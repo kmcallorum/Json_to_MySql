@@ -1,25 +1,13 @@
 import express from 'express';
+import { container } from 'tsyringe';
 import { FilterPresetService } from '../services/filterPresetService.js';
-import { DatabaseConnection } from '../database/connection.js';
 
 const router = express.Router();
-
-// Get database connection
-function getDb() {
-  return new DatabaseConnection({
-    host: process.env.DB_HOST || 'localhost',
-    port: parseInt(process.env.DB_PORT || '3306'),
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || 'root',
-    database: process.env.DB_NAME || 'test_json'
-  });
-}
 
 // Save filter preset
 router.post('/save', async (req, res) => {
   try {
-    const db = getDb();
-    const service = new FilterPresetService(db);
+    const service = container.resolve(FilterPresetService);
     
     const { name, description, baseTableName, whereConditions } = req.body;
     
@@ -40,8 +28,7 @@ router.post('/save', async (req, res) => {
 // Get all filter presets (frontend calls /list)
 router.get('/list', async (req, res) => {
   try {
-    const db = getDb();
-    const service = new FilterPresetService(db);
+    const service = container.resolve(FilterPresetService);
     
     const presets = await service.listPresets();
     res.json({ success: true, presets });
@@ -54,8 +41,7 @@ router.get('/list', async (req, res) => {
 // Also support /presets for compatibility
 router.get('/presets', async (req, res) => {
   try {
-    const db = getDb();
-    const service = new FilterPresetService(db);
+    const service = container.resolve(FilterPresetService);
     
     const presets = await service.listPresets();
     res.json({ success: true, presets });
@@ -68,8 +54,7 @@ router.get('/presets', async (req, res) => {
 // Get filter preset by name (frontend calls /load/:name)
 router.get('/load/:name', async (req, res) => {
   try {
-    const db = getDb();
-    const service = new FilterPresetService(db);
+    const service = container.resolve(FilterPresetService);
     
     const preset = await service.loadPreset(req.params.name);
     
@@ -90,8 +75,7 @@ router.get('/load/:name', async (req, res) => {
 // Also support /presets/:name for compatibility
 router.get('/presets/:name', async (req, res) => {
   try {
-    const db = getDb();
-    const service = new FilterPresetService(db);
+    const service = container.resolve(FilterPresetService);
     
     const preset = await service.loadPreset(req.params.name);
     
@@ -112,8 +96,7 @@ router.get('/presets/:name', async (req, res) => {
 // Delete filter preset
 router.delete('/:name', async (req, res) => {
   try {
-    const db = getDb();
-    const service = new FilterPresetService(db);
+    const service = container.resolve(FilterPresetService);
     
     await service.deletePreset(req.params.name);
     res.json({ success: true, message: 'Preset deleted successfully' });
