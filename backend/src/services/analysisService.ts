@@ -160,6 +160,12 @@ export class AnalysisService {
     const records = await this.db.query<any>(sampleSql, queryParams);
     console.log(`[ANALYZE] SELECT query took ${Date.now() - selectStartTime}ms. Retrieved ${records.length} records`);
 
+    // Debug: Check raw record structure
+    if (records.length > 0) {
+      console.log(`[ANALYZE] First record type:`, typeof records[0].content);
+      console.log(`[ANALYZE] First record content (raw):`, JSON.stringify(records[0].content).substring(0, 500));
+    }
+
     // Analyze fields
     const analyzeStartTime = Date.now();
     const fieldMap = new Map<string, any>();
