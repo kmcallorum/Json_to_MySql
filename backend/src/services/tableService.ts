@@ -1,4 +1,4 @@
-import { injectable } from 'tsyringe';
+import { injectable, inject } from 'tsyringe';
 import { DatabaseConnection } from '../database/connection.js';
 
 export interface ColumnInfo {
@@ -17,7 +17,7 @@ export interface TableDefinition {
 
 @injectable()
 export class TableService {
-  constructor(private db: DatabaseConnection) {}
+  constructor(@inject(DatabaseConnection) private db: DatabaseConnection) {}
 
   async listTables(): Promise<string[]> {
     const sql = 'SHOW TABLES';

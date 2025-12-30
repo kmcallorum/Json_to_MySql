@@ -1,4 +1,4 @@
-import { injectable } from 'tsyringe';
+import { injectable, inject } from 'tsyringe';
 import { DatabaseConnection } from '../database/connection.js';
 
 export interface FilterPreset {
@@ -13,7 +13,7 @@ export interface FilterPreset {
 
 @injectable()
 export class FilterPresetService {
-  constructor(private db: DatabaseConnection) {}
+  constructor(@inject(DatabaseConnection) private db: DatabaseConnection) {}
 
   async savePreset(
     name: string,

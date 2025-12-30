@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import dotenv from 'dotenv';
 import { container } from 'tsyringe';
 import { DatabaseConnection } from './database/connection.js';
 import { AnalysisService } from './services/analysisService.js';
@@ -6,6 +7,9 @@ import { ExecutionService } from './services/executionService.js';
 import { FilterPresetService } from './services/filterPresetService.js';
 import { MappingConfigService } from './services/mappingConfigService.js';
 import { TableService } from './services/tableService.js';
+
+// Load environment variables first
+dotenv.config();
 
 // Database configuration from environment
 const dbConfig = {
@@ -16,10 +20,15 @@ const dbConfig = {
   database: process.env.DB_NAME || 'test_json'
 };
 
-// Register DatabaseConnection as singleton
-container.registerSingleton(DatabaseConnection, DatabaseConnection);
+console.log('🔧 DB Config:', {
+  host: dbConfig.host,
+  port: dbConfig.port,
+  user: dbConfig.user,
+  password: dbConfig.password ? '***' + dbConfig.password.slice(-4) : '(empty)',
+  database: dbConfig.database
+});
 
-// Manually resolve and register the singleton instance
+// Create and register DatabaseConnection instance
 const dbConnection = new DatabaseConnection(dbConfig);
 container.registerInstance(DatabaseConnection, dbConnection);
 

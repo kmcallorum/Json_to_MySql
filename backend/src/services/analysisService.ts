@@ -1,4 +1,4 @@
-import { injectable } from 'tsyringe';
+import { injectable, inject } from 'tsyringe';
 import { DatabaseConnection } from '../database/connection.js';
 
 export interface TestConnectionConfig {
@@ -37,7 +37,7 @@ export interface AnalysisResult {
 
 @injectable()
 export class AnalysisService {
-  constructor(private db: DatabaseConnection) {}
+  constructor(@inject(DatabaseConnection) private db: DatabaseConnection) {}
 
   async testConnection(config: TestConnectionConfig): Promise<void> {
     const testDb = new DatabaseConnection({

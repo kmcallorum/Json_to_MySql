@@ -1,4 +1,4 @@
-import { injectable } from 'tsyringe';
+import { injectable, inject } from 'tsyringe';
 import { DatabaseConnection } from '../database/connection.js';
 import mysql from 'mysql2/promise';
 import { RelationshipService, TableRelationship } from './relationshipService.js';
@@ -12,7 +12,7 @@ export interface ExecutionResult {
 
 @injectable()
 export class ExecutionService {
-  constructor(private db: DatabaseConnection) {}
+  constructor(@inject(DatabaseConnection) private db: DatabaseConnection) {}
 
   async createTables(tables: any[]): Promise<string[]> {
     const created: string[] = [];

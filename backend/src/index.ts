@@ -1,15 +1,11 @@
 import 'reflect-metadata';
-import './container.js'; // Initialize DI container
+import './container.js'; // Initialize DI container (dotenv loads inside container.ts)
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import filterRoutes from './routes/filterRoutes.js';
 import mappingRoutes from './routes/mappingRoutes.js';
 import analysisRoutes from './routes/analysisRoutes.js';
 import tableRoutes from './routes/tableRoutes.js';
-
-// Load environment variables
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;

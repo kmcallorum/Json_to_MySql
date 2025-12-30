@@ -1,4 +1,4 @@
-import { injectable } from 'tsyringe';
+import { injectable, inject } from 'tsyringe';
 import { DatabaseConnection } from '../database/connection.js';
 
 export interface MappingConfig {
@@ -17,7 +17,7 @@ export interface MappingConfig {
 
 @injectable()
 export class MappingConfigService {
-  constructor(private db: DatabaseConnection) {}
+  constructor(@inject(DatabaseConnection) private db: DatabaseConnection) {}
 
   async saveConfig(config: MappingConfig): Promise<MappingConfig> {
     const sql = `
