@@ -99,6 +99,9 @@ export class AnalysisService {
     toProcessTable: string;
     appliedFilters: any[];
   }> {
+    const startTime = Date.now();
+    console.log(`[ANALYZE] Starting analysis for ${baseTableName} with sampleSize=${sampleSize}`);
+
     // Build WHERE clause from conditions
     let whereClause = '';
     const queryParams: any[] = [];
@@ -132,26 +135,41 @@ export class AnalysisService {
     }
 
     // Get total count
+    const countStartTime = Date.now();
     const countSql = `SELECT COUNT(*) as total FROM ${baseTableName} ${whereClause}`;
     const countResult = await this.db.query<any>(countSql, queryParams);
     const totalRecordsInTable = countResult[0]?.total || 0;
+    console.log(`[ANALYZE] COUNT query took ${Date.now() - countStartTime}ms. Total records: ${totalRecordsInTable}`);
 
     // Get sample records
+    const selectStartTime = Date.now();
     const sampleSql = `SELECT content FROM ${baseTableName} ${whereClause} LIMIT ${sampleSize}`;
     const records = await this.db.query<any>(sampleSql, queryParams);
+    console.log(`[ANALYZE] SELECT query took ${Date.now() - selectStartTime}ms. Retrieved ${records.length} records`);
 
     // Analyze fields
+    const analyzeStartTime = Date.now();
     const fieldMap = new Map<string, any>();
+    let recordCount = 0;
 
     for (const record of records) {
+      const recordStartTime = Date.now();
       const content = typeof record.content === 'string'
         ? JSON.parse(record.content)
         : record.content;
 
       this.analyzeObject(content, '', fieldMap);
+      recordCount++;
+
+      const recordTime = Date.now() - recordStartTime;
+      if (recordTime > 100) {
+        console.log(`[ANALYZE] Record ${recordCount}/${records.length} took ${recordTime}ms`);
+      }
     }
+    console.log(`[ANALYZE] Analysis of ${records.length} records took ${Date.now() - analyzeStartTime}ms`);
 
     // Convert to array and add suggestions
+    const conversionStartTime = Date.now();
     const fields = Array.from(fieldMap.values()).map((field: any) => ({
       ...field,
       types: Array.from(field.types),
@@ -159,6 +177,9 @@ export class AnalysisService {
       suggestedColumn: this.suggestColumnName(field.path),
       suggestedType: this.suggestSqlType(field),
     }));
+    console.log(`[ANALYZE] Conversion and suggestions took ${Date.now() - conversionStartTime}ms. Found ${fields.length} fields`);
+
+    console.log(`[ANALYZE] Total analysis time: ${Date.now() - startTime}ms`);
 
     return {
       analysis: {
@@ -202,7 +223,7 @@ export class AnalysisService {
     fieldMap: Map<string, any>,
     visited: WeakSet<object> = new WeakSet(),
     depth: number = 0,
-    maxDepth: number = 50
+    maxDepth: number = 20
   ): void {
     if (obj === null || obj === undefined) {
       return;
@@ -270,7 +291,7 @@ export class AnalysisService {
     fieldMap: Map<string, any>,
     visited: WeakSet<object> = new WeakSet(),
     depth: number = 0,
-    maxDepth: number = 50
+    maxDepth: number = 20
   ): void {
     if (obj === null || obj === undefined) {
       return;
