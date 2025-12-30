@@ -62,7 +62,15 @@ router.post('/analyze', async (req, res) => {
     }
 
     const service = container.resolve(AnalysisService);
-    const result = await service.analyze(baseTableName, sampleSize, whereConditions);
+
+    // Add timeout protection to prevent indefinite hanging
+    const timeoutMs = 60000; // 60 seconds timeout
+    const analysisPromise = service.analyze(baseTableName, sampleSize, whereConditions);
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error(`Analysis timeout after ${timeoutMs}ms. This may indicate circular references or very deeply nested JSON structures.`)), timeoutMs);
+    });
+
+    const result = await Promise.race([analysisPromise, timeoutPromise]) as Awaited<ReturnType<typeof service.analyze>>;
 
     res.json({
       success: true,

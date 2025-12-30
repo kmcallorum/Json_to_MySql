@@ -196,19 +196,39 @@ export class AnalysisService {
   }
 
   // Helper methods
-  private extractFieldMetadata(obj: any, prefix: string, fieldMap: Map<string, any>): void {
+  private extractFieldMetadata(
+    obj: any,
+    prefix: string,
+    fieldMap: Map<string, any>,
+    visited: WeakSet<object> = new WeakSet(),
+    depth: number = 0,
+    maxDepth: number = 50
+  ): void {
     if (obj === null || obj === undefined) {
+      return;
+    }
+
+    // Prevent infinite recursion from deeply nested structures
+    if (depth > maxDepth) {
+      console.warn(`Max depth ${maxDepth} reached at path: ${prefix}`);
       return;
     }
 
     if (Array.isArray(obj)) {
       if (obj.length > 0) {
-        this.extractFieldMetadata(obj[0], prefix, fieldMap);
+        this.extractFieldMetadata(obj[0], prefix, fieldMap, visited, depth + 1, maxDepth);
       }
       return;
     }
 
     if (typeof obj === 'object') {
+      // Prevent circular reference infinite loops
+      if (visited.has(obj)) {
+        console.warn(`Circular reference detected at path: ${prefix}`);
+        return;
+      }
+      visited.add(obj);
+
       for (const key in obj) {
         const path = prefix ? `${prefix}.${key}` : key;
         const value = obj[key];
@@ -235,28 +255,48 @@ export class AnalysisService {
           }
         }
 
-        if (typeof value === 'object' && !Array.isArray(value)) {
-          this.extractFieldMetadata(value, path, fieldMap);
+        if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+          this.extractFieldMetadata(value, path, fieldMap, visited, depth + 1, maxDepth);
         } else if (Array.isArray(value) && value.length > 0) {
-          this.extractFieldMetadata(value[0], path, fieldMap);
+          this.extractFieldMetadata(value[0], path, fieldMap, visited, depth + 1, maxDepth);
         }
       }
     }
   }
 
-  private analyzeObject(obj: any, prefix: string, fieldMap: Map<string, any>): void {
+  private analyzeObject(
+    obj: any,
+    prefix: string,
+    fieldMap: Map<string, any>,
+    visited: WeakSet<object> = new WeakSet(),
+    depth: number = 0,
+    maxDepth: number = 50
+  ): void {
     if (obj === null || obj === undefined) {
+      return;
+    }
+
+    // Prevent infinite recursion from deeply nested structures
+    if (depth > maxDepth) {
+      console.warn(`Max depth ${maxDepth} reached at path: ${prefix}`);
       return;
     }
 
     if (Array.isArray(obj)) {
       if (obj.length > 0) {
-        this.analyzeObject(obj[0], prefix, fieldMap);
+        this.analyzeObject(obj[0], prefix, fieldMap, visited, depth + 1, maxDepth);
       }
       return;
     }
 
     if (typeof obj === 'object') {
+      // Prevent circular reference infinite loops
+      if (visited.has(obj)) {
+        console.warn(`Circular reference detected at path: ${prefix}`);
+        return;
+      }
+      visited.add(obj);
+
       for (const key in obj) {
         const path = prefix ? `${prefix}.${key}` : key;
         const value = obj[key];
@@ -290,10 +330,10 @@ export class AnalysisService {
             field.maxLength = value.length;
           }
 
-          if (typeof value === 'object' && !Array.isArray(value)) {
-            this.analyzeObject(value, path, fieldMap);
+          if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+            this.analyzeObject(value, path, fieldMap, visited, depth + 1, maxDepth);
           } else if (Array.isArray(value) && value.length > 0) {
-            this.analyzeObject(value[0], path, fieldMap);
+            this.analyzeObject(value[0], path, fieldMap, visited, depth + 1, maxDepth);
           }
         }
       }
