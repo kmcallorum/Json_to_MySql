@@ -28,12 +28,10 @@ This system transforms complex, nested JSON documents stored in Elasticsearch in
 - [Architecture](#architecture)
 - [Installation](#installation)
 - [Quick Start](#quick-start)
-- [Testing](#testing)
 - [Configuration](#configuration)
 - [Daily ETL Workflow](#daily-etl-workflow)
 - [Monitoring](#monitoring)
 - [API Reference](#api-reference)
-- [Contributing](#contributing)
 - [Troubleshooting](#troubleshooting)
 
 ---
@@ -121,8 +119,7 @@ This system transforms complex, nested JSON documents stored in Elasticsearch in
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/Json-Flattener.git
-cd Json-Flattener
+cd /Users/kmcallorum/Projects/Json-Flattner
 
 # Install backend dependencies
 cd backend
@@ -132,7 +129,7 @@ npm install
 cd ../frontend
 npm install
 
-# Configure database (if you have a setup script)
+# Configure database
 mysql -u root -p < setup/database.sql
 ```
 
@@ -247,125 +244,6 @@ Open http://localhost:5173
 
 ---
 
-## 🧪 Testing
-
-This project has **comprehensive test coverage** across all layers with **150 tests** achieving 100% coverage on critical services.
-
-### Test Statistics
-
-| Test Type | Count | Coverage | Status |
-|-----------|-------|----------|--------|
-| **Backend Unit Tests** | 80 | 100% statements/functions/lines | ✅ Passing |
-| **Backend Integration Tests** | 16 | All API endpoints | ✅ Passing |
-| **Frontend Unit Tests** | 49 | All components | ✅ Passing |
-| **E2E Tests (Playwright)** | 5 | Main workflows | ✅ Passing |
-| **TOTAL** | **150** | **Comprehensive** | **✅ 100%** |
-
-### Running Tests
-
-#### Backend Tests
-
-```bash
-cd backend
-
-# Run all tests (unit + integration)
-npm test
-
-# Run only unit tests
-npm run test:unit
-
-# Run only integration tests
-npm run test:integration
-
-# Run with coverage report
-npm run test:coverage
-```
-
-**Expected Output:**
-```
-Test Suites: 8 passed, 8 total
-Tests:       96 passed, 96 total
-Coverage:    100% statements, 100% functions, 100% lines, 98.23% branches
-Time:        3.979s
-```
-
-#### Frontend Tests
-
-```bash
-cd frontend
-
-# Run unit tests
-npm run test:unit
-
-# Run integration tests
-npm run test:integration
-
-# Run all tests
-npm test
-
-# Run E2E tests (requires dev server)
-npm run test:e2e
-
-# Run with coverage report
-npm run test:coverage
-```
-
-**Expected Output:**
-```
-Test Suites: 10 passed, 10 total
-Tests:       49 passed, 49 total
-Time:        1.986s
-
-E2E Tests:   5 passed, 5 total
-```
-
-### Test Coverage Details
-
-#### Backend Services (100% Coverage)
-
-- **executionService.ts**: Table creation, record flattening, WHERE clauses, auto-relationships, FK handling, error translation
-- **filterPresetService.ts**: CRUD operations, JSON parsing, edge cases
-- **mappingConfigService.ts**: Configuration management, data formats
-- **relationshipService.ts**: Auto-detect, topological sorting, circular dependency detection
-
-#### Integration Tests
-
-- **Filter Routes**: Save, load, list, delete presets
-- **Mapping Routes**: Save, load, list, delete configs, execute flattening
-
-#### Frontend Components
-
-- **JsonAnalyzerComponent**: All workflow steps, connection testing, field discovery
-- **FilterBuilder**: Add/remove conditions, field selection, operators
-- **FilterPresets**: Save/load/delete presets, validation
-- **SaveLoadConfig**: Configuration management
-
-#### E2E Tests (Playwright)
-
-- Complete user workflow: connect → discover → filter → analyze → execute
-- Error handling scenarios
-- UI state changes and interactions
-- Filter preset management
-
-### Dependency Injection for Testing
-
-This project uses **TSyringe** for dependency injection, making all services easily mockable:
-
-```typescript
-// Example: Mocking in tests
-const mockDb = { query: jest.fn(), ... };
-container.registerInstance(DatabaseConnection, mockDb);
-
-// Service automatically receives mock
-const service = container.resolve(FilterPresetService);
-```
-
-### Continuous Integration
-
-All tests run automatically on every pull request via GitHub Actions. See [`.github/workflows/ci.yml`](.github/workflows/ci.yml) for the CI configuration.
-
----
-
 ## ⚙️ Configuration
 
 ### Filter Presets
@@ -441,7 +319,7 @@ The ETL script (`run-daily-etl-v2.js`) handles:
 ### Manual Execution
 
 ```bash
-cd /path/to/Json-Flattener
+cd /Users/kmcallorum/Projects/Json-Flattner
 
 # Run with default config
 node run-daily-etl-v2.js
@@ -457,7 +335,7 @@ node run-daily-etl-v2.js production
 crontab -e
 
 # Add daily 2 AM execution
-0 2 * * * cd /path/to/Json-Flattener && node run-daily-etl-v2.js production >> etl.log 2>&1
+0 2 * * * cd /Users/kmcallorum/Projects/Json-Flattner && /usr/local/bin/node run-daily-etl-v2.js production >> etl.log 2>&1
 
 # Other schedule examples:
 # Every 6 hours: 0 */6 * * *
@@ -812,31 +690,11 @@ console.log('Debug: Generated IDs', Array.from(generatedIds.entries()));
 
 ## 📝 License
 
-MIT License - See [LICENSE](LICENSE) file for details.
+MIT License - Free to use and modify
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details on:
-
-- Code of conduct
-- Development setup
-- Submitting pull requests
-- Reporting issues
-
-### Quick Contribution Guide
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Run tests (`npm test` in both backend and frontend)
-4. Commit your changes (`git commit -m 'Add amazing feature'`)
-5. Push to the branch (`git push origin feature/amazing-feature`)
-6. Open a Pull Request
-
-All PRs must:
-- ✅ Pass all existing tests
-- ✅ Include tests for new functionality
-- ✅ Maintain 100% test coverage on critical services
-- ✅ Follow existing code style
+This is a production tool developed for internal use. For questions or issues, contact the development team.
 
 ---
 

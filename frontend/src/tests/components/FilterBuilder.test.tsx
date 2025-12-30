@@ -8,14 +8,12 @@ describe('FilterBuilder Component', () => {
   const mockFields = [
     {
       path: '_source.type',
-      types: ['string'],
       uniqueValues: ['event.test', 'event.run'],
       nullCount: 0,
       totalCount: 100
     },
     {
       path: '_source.id',
-      types: ['number'],
       uniqueValues: [1, 2, 3],
       nullCount: 0,
       totalCount: 100

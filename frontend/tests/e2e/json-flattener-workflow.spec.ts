@@ -107,16 +107,17 @@ test.describe('JSON to SQL Flattener - Full User Workflow', () => {
     await expect(page.getByText(/Discovered \d+ fields/i)).toBeVisible({ timeout: 5000 });
 
     // Step 4: Verify WHERE conditions builder appears
-    await expect(page.getByRole('heading', { name: /Step 3:/ })).toBeVisible({ timeout: 3000 });
+    await expect(page.getByText(/Step 3:/i)).toBeVisible({ timeout: 3000 });
+    await expect(page.getByText(/Build WHERE Conditions/i)).toBeVisible();
 
     // Add a filter condition
     const addConditionBtn = page.getByRole('button', { name: /Add Condition/i });
     if (await addConditionBtn.isVisible()) {
       await addConditionBtn.click();
 
-      // Verify filter UI elements appear (checking for select dropdowns)
-      const comboboxes = page.getByRole('combobox');
-      await expect(comboboxes.first()).toBeVisible();
+      // Verify filter UI elements appear
+      await expect(page.getByText('Field')).toBeVisible();
+      await expect(page.getByText('Operator')).toBeVisible();
     }
 
     // Step 5: Verify Analysis step appears
@@ -168,6 +169,7 @@ test.describe('JSON to SQL Flattener - Full User Workflow', () => {
 
     // Verify error message appears
     await expect(page.getByText(/Database connection failed/i)).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText(/Failed/i)).toBeVisible();
   });
 
   test('should allow updating base table name', async ({ page }) => {
@@ -230,7 +232,7 @@ test.describe('JSON to SQL Flattener - Full User Workflow', () => {
     await page.waitForTimeout(1000);
 
     // Verify filter section appears
-    await expect(page.getByRole('heading', { name: /Step 3:/ })).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText(/Build WHERE Conditions/i)).toBeVisible({ timeout: 5000 });
 
     // Look for save/load filter preset buttons
     const savePresetBtn = page.getByRole('button', { name: /Save Filter Preset/i });

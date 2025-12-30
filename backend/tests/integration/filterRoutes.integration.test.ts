@@ -18,17 +18,17 @@ describe('Filter Routes Integration Tests', () => {
   beforeAll(() => {
     // Mock the database connection
     mockDb = {
-      query: jest.fn() as any,
-      rawQuery: jest.fn() as any,
-      close: jest.fn() as any
+      query: jest.fn(),
+      rawQuery: jest.fn(),
+      close: jest.fn()
     } as any;
 
     // Mock the service
     mockService = {
-      savePreset: jest.fn() as any,
-      loadPreset: jest.fn() as any,
-      listPresets: jest.fn() as any,
-      deletePreset: jest.fn() as any
+      savePreset: jest.fn(),
+      loadPreset: jest.fn(),
+      listPresets: jest.fn(),
+      deletePreset: jest.fn()
     } as any;
 
     // Register mocks in container

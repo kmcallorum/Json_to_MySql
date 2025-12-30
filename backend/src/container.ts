@@ -1,9 +1,11 @@
 import 'reflect-metadata';
 import { container } from 'tsyringe';
 import { DatabaseConnection } from './database/connection.js';
+import { AnalysisService } from './services/analysisService.js';
 import { ExecutionService } from './services/executionService.js';
 import { FilterPresetService } from './services/filterPresetService.js';
 import { MappingConfigService } from './services/mappingConfigService.js';
+import { TableService } from './services/tableService.js';
 
 // Database configuration from environment
 const dbConfig = {
@@ -22,8 +24,10 @@ const dbConnection = new DatabaseConnection(dbConfig);
 container.registerInstance(DatabaseConnection, dbConnection);
 
 // Register services - they will automatically receive DatabaseConnection via constructor injection
+container.registerSingleton(AnalysisService, AnalysisService);
 container.registerSingleton(ExecutionService, ExecutionService);
 container.registerSingleton(FilterPresetService, FilterPresetService);
 container.registerSingleton(MappingConfigService, MappingConfigService);
+container.registerSingleton(TableService, TableService);
 
 export { container };

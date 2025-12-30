@@ -20,22 +20,22 @@ describe('Mapping Routes Integration Tests', () => {
   beforeAll(() => {
     // Mock the database connection
     mockDb = {
-      query: jest.fn() as any,
-      rawQuery: jest.fn() as any,
-      close: jest.fn() as any
+      query: jest.fn(),
+      rawQuery: jest.fn(),
+      close: jest.fn()
     } as any;
 
     // Mock services
     mockMappingService = {
-      saveConfig: jest.fn() as any,
-      loadConfig: jest.fn() as any,
-      listConfigs: jest.fn() as any,
-      deleteConfig: jest.fn() as any
+      saveConfig: jest.fn(),
+      loadConfig: jest.fn(),
+      listConfigs: jest.fn(),
+      deleteConfig: jest.fn()
     } as any;
 
     mockExecutionService = {
-      createTables: jest.fn() as any,
-      flattenRecords: jest.fn() as any
+      createTables: jest.fn(),
+      flattenRecords: jest.fn()
     } as any;
 
     // Register mocks in container
