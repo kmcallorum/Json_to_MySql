@@ -113,7 +113,7 @@ export const App: React.FC = () => {
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h1 style={{ 
+        <h1 style={{
           borderBottom: '2px solid #007bff',
           paddingBottom: '10px',
           margin: 0,
@@ -121,12 +121,29 @@ export const App: React.FC = () => {
           JSON to SQL Flattener
         </h1>
 
-        {(['map-fields', 'define-relationships', 'generate-sql'].includes(currentStep)) && mappings.length > 0 && (
-          <SaveLoadConfig 
-            currentConfig={getCurrentConfig()}
-            onLoad={handleLoadConfig}
-          />
-        )}
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <button
+            onClick={handleOpenStaging}
+            style={{
+              padding: '10px 20px',
+              backgroundColor: '#28a745',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+            }}
+          >
+            📦 Stage Data
+          </button>
+
+          {(['map-fields', 'define-relationships', 'generate-sql'].includes(currentStep)) && mappings.length > 0 && (
+            <SaveLoadConfig
+              currentConfig={getCurrentConfig()}
+              onLoad={handleLoadConfig}
+            />
+          )}
+        </div>
       </div>
 
       {/* Progress Indicator */}

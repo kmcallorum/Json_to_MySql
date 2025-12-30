@@ -95,7 +95,15 @@ export const App = () => {
                             borderBottom: '2px solid #007bff',
                             paddingBottom: '10px',
                             margin: 0,
-                        }, children: "JSON to SQL Flattener" }), (['map-fields', 'define-relationships', 'generate-sql'].includes(currentStep)) && mappings.length > 0 && (_jsx(SaveLoadConfig, { currentConfig: getCurrentConfig(), onLoad: handleLoadConfig }))] }), _jsxs("div", { style: { marginBottom: '30px', display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }, children: [_jsx("div", { style: {
+                        }, children: "JSON to SQL Flattener" }), _jsxs("div", { style: { display: 'flex', gap: '10px', alignItems: 'center' }, children: [_jsx("button", { onClick: handleOpenStaging, style: {
+                                    padding: '10px 20px',
+                                    backgroundColor: '#28a745',
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer',
+                                    fontWeight: 'bold',
+                                }, children: "\uD83D\uDCE6 Stage Data" }), (['map-fields', 'define-relationships', 'generate-sql'].includes(currentStep)) && mappings.length > 0 && (_jsx(SaveLoadConfig, { currentConfig: getCurrentConfig(), onLoad: handleLoadConfig }))] })] }), _jsxs("div", { style: { marginBottom: '30px', display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }, children: [_jsx("div", { style: {
                             padding: '8px 16px',
                             backgroundColor: currentStep === 'analyze' ? '#007bff' : '#28a745',
                             color: 'white',

@@ -1,25 +1,58 @@
-import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
 import { useState, useEffect } from 'react';
 import { api } from '../../services/api';
-export const StagingWorkflow = ({ sourceTables, onClose, }) => {
-    const [isAnalyzing, setIsAnalyzing] = useState(false);
-    const [sourceAnalysis, setSourceAnalysis] = useState([]);
+import { StagingTableSelector } from './StagingTableSelector';
+import { StagingColumnMapper } from './StagingColumnMapper';
+import { StagingRelationshipEditor } from './StagingRelationshipEditor';
+export const StagingWorkflow = ({ sourceTables: propsSourceTables, onClose, }) => {
+    const [currentStep, setCurrentStep] = useState('select-source');
+    const [sourceTables, setSourceTables] = useState(propsSourceTables || []);
     const [stagingTables, setStagingTables] = useState([]);
     const [mappings, setMappings] = useState([]);
+    const [relationships, setRelationships] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
     const [isExecuting, setIsExecuting] = useState(false);
     const [message, setMessage] = useState('');
+    const [availableTables, setAvailableTables] = useState([]);
+    const [selectedSourceTables, setSelectedSourceTables] = useState([]);
     useEffect(() => {
-        analyzeSourceTables();
-    }, []);
-    const analyzeSourceTables = async () => {
-        setIsAnalyzing(true);
+        if (propsSourceTables && propsSourceTables.length > 0) {
+            // Skip source selection if tables were provided
+            setCurrentStep('select-staging');
+        }
+        else {
+            loadAvailableTables();
+        }
+    }, [propsSourceTables]);
+    const loadAvailableTables = async () => {
+        setIsLoading(true);
         try {
-            const tableNames = sourceTables.map(t => t.name);
-            const result = await api.analyzeTables(tableNames);
+            const result = await api.getTableList();
             if (result.success) {
-                setSourceAnalysis(result.tables);
-                // Auto-suggest staging tables
-                autoSuggestStagingTables(result.tables);
+                // Filter out _toprocess tables
+                const filtered = result.tables.filter((t) => !t.endsWith('_toprocess'));
+                setAvailableTables(filtered);
+            }
+        }
+        catch (error) {
+            console.error('Error loading tables:', error);
+        }
+        finally {
+            setIsLoading(false);
+        }
+    };
+    const handleSourceTablesSelected = async () => {
+        if (selectedSourceTables.length === 0) {
+            alert('Please select at least one source table');
+            return;
+        }
+        setIsLoading(true);
+        try {
+            // Load structures of selected tables
+            const result = await api.analyzeTables(selectedSourceTables);
+            if (result.success) {
+                setSourceTables(result.tables);
+                setCurrentStep('select-staging');
             }
             else {
                 setMessage(`Error: ${result.error}`);
@@ -29,58 +62,50 @@ export const StagingWorkflow = ({ sourceTables, onClose, }) => {
             setMessage(`Error: ${error.message}`);
         }
         finally {
-            setIsAnalyzing(false);
+            setIsLoading(false);
         }
     };
-    const autoSuggestStagingTables = (tables) => {
-        const suggested = tables.map(table => ({
-            name: `staging_${table.tableName}`,
-            isNew: true,
-            columns: table.columns.map((col) => ({
-                ...col,
-                name: col.name,
-                type: col.type,
-            })),
-        }));
-        setStagingTables(suggested);
-        // Auto-create mappings (1-to-1 column mapping)
-        const autoMappings = [];
-        tables.forEach(table => {
-            table.columns.forEach((col) => {
-                autoMappings.push({
-                    sourceTable: table.tableName,
-                    sourceColumn: col.name,
-                    targetTable: `staging_${table.tableName}`,
-                    targetColumn: col.name,
-                });
-            });
-        });
-        setMappings(autoMappings);
+    const handleStagingTablesSelected = (tables) => {
+        setStagingTables(tables);
+        setCurrentStep('map-columns');
+    };
+    const handleMappingsComplete = () => {
+        if (mappings.length === 0) {
+            alert('Please map at least one column');
+            return;
+        }
+        setCurrentStep('define-relationships');
+    };
+    const handleRelationshipsComplete = () => {
+        setCurrentStep('execute');
     };
     const handleExecute = async () => {
-        if (!confirm(`Create staging tables and copy data?\n\n${stagingTables.length} tables will be created.\n${mappings.length} columns will be mapped.`)) {
+        if (!confirm(`Execute staging process?\n\n${stagingTables.filter(t => t.isNew).length} new tables will be created\n${mappings.length} columns will be mapped\n${relationships.length} relationships defined\n\nContinue?`)) {
             return;
         }
         setIsExecuting(true);
         setMessage('');
         try {
-            // Step 1: Create staging tables
-            const createResult = await api.createStagingTables(stagingTables);
-            if (!createResult.success) {
-                setMessage(`Error creating tables: ${createResult.error}`);
-                return;
+            // Step 1: Create new staging tables
+            const newTables = stagingTables.filter(t => t.isNew);
+            if (newTables.length > 0) {
+                const createResult = await api.createStagingTables(newTables);
+                if (!createResult.success) {
+                    setMessage(`Error creating tables: ${createResult.error}`);
+                    return;
+                }
+                setMessage(`✓ Created ${createResult.tablesCreated.length} staging tables\n`);
             }
-            setMessage(`✓ Created ${createResult.tablesCreated.length} staging tables`);
             // Step 2: Execute staging copy
-            const sourceTableNames = sourceTables.map(t => t.name);
+            const sourceTableNames = sourceTables.map(t => t.tableName);
             const copyResult = await api.executeStagingCopy({
                 mappings,
-                relationships: [], // You can enhance this later
+                relationships,
                 sourceTables: sourceTableNames,
                 batchSize: 100,
             });
             if (copyResult.success) {
-                setMessage(`✓ Success! Copied ${copyResult.processed} records to staging tables.`);
+                setMessage(prev => prev + `\n✓ Success! Copied ${copyResult.processed} records to staging tables.`);
                 if (copyResult.errors.length > 0) {
                     setMessage(prev => prev + `\n⚠ ${copyResult.errors.length} errors occurred.`);
                 }
@@ -94,6 +119,17 @@ export const StagingWorkflow = ({ sourceTables, onClose, }) => {
         }
         finally {
             setIsExecuting(false);
+        }
+    };
+    const handleBack = () => {
+        const steps = ['select-source', 'select-staging', 'map-columns', 'define-relationships', 'execute'];
+        const currentIndex = steps.indexOf(currentStep);
+        if (currentIndex > 0) {
+            // Skip select-source if we had props source tables
+            if (steps[currentIndex - 1] === 'select-source' && propsSourceTables && propsSourceTables.length > 0) {
+                return; // Can't go back
+            }
+            setCurrentStep(steps[currentIndex - 1]);
         }
     };
     return (_jsx("div", { style: {
@@ -111,40 +147,144 @@ export const StagingWorkflow = ({ sourceTables, onClose, }) => {
                 backgroundColor: 'white',
                 padding: '30px',
                 borderRadius: '8px',
-                maxWidth: '900px',
-                width: '90%',
-                maxHeight: '80vh',
+                maxWidth: '1200px',
+                width: '95%',
+                maxHeight: '90vh',
                 overflowY: 'auto',
-            }, children: [_jsx("h2", { children: "Stage Data to Staging Tables" }), _jsx("p", { style: { color: '#666' }, children: "Copy data from your flattened tables to staging tables for DEV/STAGE/PROD deployment." }), isAnalyzing && (_jsx("div", { style: { padding: '20px', textAlign: 'center' }, children: _jsx("p", { children: "Analyzing source tables..." }) })), !isAnalyzing && sourceAnalysis.length > 0 && (_jsxs("div", { children: [_jsxs("div", { style: { marginBottom: '20px' }, children: [_jsxs("h3", { children: ["Source Tables (", sourceAnalysis.length, ")"] }), _jsx("div", { style: { display: 'grid', gap: '10px' }, children: sourceAnalysis.map(table => (_jsxs("div", { style: {
+            }, children: [_jsxs("div", { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }, children: [_jsx("h2", { children: "Stage Data Workflow" }), _jsx("button", { onClick: onClose, style: {
+                                padding: '8px 16px',
+                                backgroundColor: '#6c757d',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                            }, children: "\u2715 Close" })] }), _jsxs("div", { style: { marginBottom: '30px', display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }, children: [(!propsSourceTables || propsSourceTables.length === 0) && (_jsxs(_Fragment, { children: [_jsx("div", { style: {
+                                        padding: '8px 16px',
+                                        backgroundColor: currentStep === 'select-source' ? '#007bff' : '#28a745',
+                                        color: 'white',
+                                        borderRadius: '4px',
+                                        fontSize: '14px',
+                                    }, children: currentStep === 'select-source' ? '1. Selecting Source...' : '✓ 1. Source' }), _jsx("div", { style: { width: '20px', height: '2px', backgroundColor: '#dee2e6' } })] })), _jsx("div", { style: {
+                                padding: '8px 16px',
+                                backgroundColor: currentStep === 'select-staging'
+                                    ? '#007bff'
+                                    : ['map-columns', 'define-relationships', 'execute'].includes(currentStep)
+                                        ? '#28a745'
+                                        : '#dee2e6',
+                                color: currentStep === 'select-staging' || ['map-columns', 'define-relationships', 'execute'].includes(currentStep)
+                                    ? 'white'
+                                    : '#6c757d',
+                                borderRadius: '4px',
+                                fontSize: '14px',
+                            }, children: currentStep === 'select-staging' ? '2. Selecting Staging...' : '✓ 2. Staging' }), _jsx("div", { style: { width: '20px', height: '2px', backgroundColor: '#dee2e6' } }), _jsx("div", { style: {
+                                padding: '8px 16px',
+                                backgroundColor: currentStep === 'map-columns'
+                                    ? '#007bff'
+                                    : ['define-relationships', 'execute'].includes(currentStep)
+                                        ? '#28a745'
+                                        : '#dee2e6',
+                                color: currentStep === 'map-columns' || ['define-relationships', 'execute'].includes(currentStep)
+                                    ? 'white'
+                                    : '#6c757d',
+                                borderRadius: '4px',
+                                fontSize: '14px',
+                            }, children: currentStep === 'map-columns' ? '3. Mapping...' : '✓ 3. Mapped' }), _jsx("div", { style: { width: '20px', height: '2px', backgroundColor: '#dee2e6' } }), _jsx("div", { style: {
+                                padding: '8px 16px',
+                                backgroundColor: currentStep === 'define-relationships'
+                                    ? '#007bff'
+                                    : currentStep === 'execute'
+                                        ? '#28a745'
+                                        : '#dee2e6',
+                                color: ['define-relationships', 'execute'].includes(currentStep) ? 'white' : '#6c757d',
+                                borderRadius: '4px',
+                                fontSize: '14px',
+                            }, children: currentStep === 'define-relationships' ? '4. Relationships...' : '✓ 4. Relations' }), _jsx("div", { style: { width: '20px', height: '2px', backgroundColor: '#dee2e6' } }), _jsx("div", { style: {
+                                padding: '8px 16px',
+                                backgroundColor: currentStep === 'execute' ? '#007bff' : '#dee2e6',
+                                color: currentStep === 'execute' ? 'white' : '#6c757d',
+                                borderRadius: '4px',
+                                fontSize: '14px',
+                            }, children: "5. Execute" })] }), currentStep === 'select-source' && (_jsxs("div", { children: [_jsx("h3", { children: "Step 1: Select Source Tables" }), _jsx("p", { style: { color: '#666' }, children: "Select the flattened tables you want to copy to staging." }), isLoading ? (_jsx("p", { children: "Loading available tables..." })) : (_jsxs("div", { children: [_jsx("div", { style: { marginBottom: '20px', maxHeight: '400px', overflowY: 'auto' }, children: availableTables.map(table => (_jsxs("div", { style: {
                                             padding: '10px',
-                                            backgroundColor: '#f8f9fa',
-                                            borderRadius: '4px',
+                                            marginBottom: '8px',
+                                            backgroundColor: selectedSourceTables.includes(table) ? '#d4edda' : '#f8f9fa',
                                             border: '1px solid #dee2e6',
-                                        }, children: [_jsx("strong", { children: table.tableName }), _jsxs("span", { style: { marginLeft: '10px', color: '#666', fontSize: '14px' }, children: [table.columns.length, " columns \u2022 ", table.rowCount, " rows"] })] }, table.tableName))) })] }), _jsxs("div", { style: { marginBottom: '20px' }, children: [_jsx("h3", { children: "Staging Tables (Auto-Generated)" }), _jsx("div", { style: { display: 'grid', gap: '10px' }, children: stagingTables.map(table => (_jsxs("div", { style: {
-                                            padding: '10px',
-                                            backgroundColor: '#d4edda',
                                             borderRadius: '4px',
-                                            border: '1px solid #c3e6cb',
-                                        }, children: [_jsx("strong", { children: table.name }), _jsxs("span", { style: { marginLeft: '10px', color: '#666', fontSize: '14px' }, children: [table.columns.length, " columns"] })] }, table.name))) }), _jsx("p", { style: { marginTop: '10px', fontSize: '14px', color: '#666' }, children: "Columns will be mapped 1-to-1 from source to staging tables." })] }), message && (_jsx("div", { style: {
+                                            cursor: 'pointer',
+                                        }, onClick: () => {
+                                            if (selectedSourceTables.includes(table)) {
+                                                setSelectedSourceTables(prev => prev.filter(t => t !== table));
+                                            }
+                                            else {
+                                                setSelectedSourceTables(prev => [...prev, table]);
+                                            }
+                                        }, children: [_jsx("strong", { children: table }), selectedSourceTables.includes(table) && (_jsx("span", { style: { marginLeft: '10px', color: '#28a745' }, children: "\u2713 Selected" }))] }, table))) }), _jsx("button", { onClick: handleSourceTablesSelected, disabled: selectedSourceTables.length === 0, style: {
+                                        padding: '12px 24px',
+                                        backgroundColor: selectedSourceTables.length > 0 ? '#28a745' : '#ccc',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '4px',
+                                        cursor: selectedSourceTables.length > 0 ? 'pointer' : 'not-allowed',
+                                        fontWeight: 'bold',
+                                    }, children: "Continue to Staging Tables \u2192" })] }))] })), currentStep === 'select-staging' && (_jsxs("div", { children: [_jsx(StagingTableSelector, { sourceTableNames: sourceTables.map(t => t.tableName), onTablesSelected: handleStagingTablesSelected }), sourceTables.length > 0 && (_jsx("button", { onClick: handleBack, style: {
+                                marginTop: '10px',
+                                padding: '10px 20px',
+                                backgroundColor: '#6c757d',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                            }, children: "\u2190 Back" }))] })), currentStep === 'map-columns' && (_jsxs("div", { children: [_jsx("h3", { children: "Step 3: Map Columns" }), _jsx("p", { style: { color: '#666' }, children: "Drag columns from source tables to staging tables." }), _jsx(StagingColumnMapper, { sourceTables: sourceTables, stagingTables: stagingTables, onMappingsChange: setMappings, initialMappings: mappings }), _jsxs("div", { style: { marginTop: '20px', display: 'flex', gap: '10px' }, children: [_jsx("button", { onClick: handleBack, style: {
+                                        padding: '10px 20px',
+                                        backgroundColor: '#6c757d',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '4px',
+                                        cursor: 'pointer',
+                                    }, children: "\u2190 Back" }), _jsx("button", { onClick: handleMappingsComplete, disabled: mappings.length === 0, style: {
+                                        padding: '12px 24px',
+                                        backgroundColor: mappings.length > 0 ? '#28a745' : '#ccc',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '4px',
+                                        cursor: mappings.length > 0 ? 'pointer' : 'not-allowed',
+                                        fontWeight: 'bold',
+                                    }, children: "Continue to Relationships \u2192" })] })] })), currentStep === 'define-relationships' && (_jsxs("div", { children: [_jsx(StagingRelationshipEditor, { tables: stagingTables, relationships: relationships, onRelationshipsChange: setRelationships }), _jsxs("div", { style: { marginTop: '20px', display: 'flex', gap: '10px' }, children: [_jsx("button", { onClick: handleBack, style: {
+                                        padding: '10px 20px',
+                                        backgroundColor: '#6c757d',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '4px',
+                                        cursor: 'pointer',
+                                    }, children: "\u2190 Back" }), _jsx("button", { onClick: handleRelationshipsComplete, style: {
+                                        padding: '12px 24px',
+                                        backgroundColor: '#28a745',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '4px',
+                                        cursor: 'pointer',
+                                        fontWeight: 'bold',
+                                    }, children: "Continue to Execute \u2192" })] })] })), currentStep === 'execute' && (_jsxs("div", { children: [_jsx("h3", { children: "Step 5: Execute Staging Process" }), _jsx("p", { style: { color: '#666' }, children: "Review and execute the staging copy process." }), _jsxs("div", { style: { marginBottom: '20px', padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '4px' }, children: [_jsx("h4", { children: "Summary:" }), _jsxs("ul", { children: [_jsxs("li", { children: ["Source Tables: ", sourceTables.length] }), _jsxs("li", { children: ["Staging Tables: ", stagingTables.length] }), _jsxs("li", { children: ["New Tables to Create: ", stagingTables.filter(t => t.isNew).length] }), _jsxs("li", { children: ["Column Mappings: ", mappings.length] }), _jsxs("li", { children: ["Relationships: ", relationships.length] })] })] }), message && (_jsx("div", { style: {
                                 padding: '15px',
                                 marginBottom: '20px',
                                 backgroundColor: message.includes('Error') ? '#f8d7da' : '#d4edda',
                                 borderRadius: '4px',
                                 whiteSpace: 'pre-line',
-                            }, children: message })), _jsxs("div", { style: { display: 'flex', gap: '10px', justifyContent: 'flex-end' }, children: [_jsx("button", { onClick: onClose, disabled: isExecuting, style: {
+                            }, children: message })), _jsxs("div", { style: { display: 'flex', gap: '10px' }, children: [_jsx("button", { onClick: handleBack, disabled: isExecuting, style: {
                                         padding: '10px 20px',
                                         backgroundColor: '#6c757d',
                                         color: 'white',
                                         border: 'none',
                                         borderRadius: '4px',
                                         cursor: isExecuting ? 'not-allowed' : 'pointer',
-                                    }, children: "Close" }), _jsx("button", { onClick: handleExecute, disabled: isExecuting, style: {
+                                    }, children: "\u2190 Back" }), _jsx("button", { onClick: handleExecute, disabled: isExecuting, style: {
                                         padding: '12px 24px',
-                                        backgroundColor: isExecuting ? '#ccc' : '#28a745',
+                                        backgroundColor: isExecuting ? '#ccc' : '#dc3545',
                                         color: 'white',
                                         border: 'none',
                                         borderRadius: '4px',
                                         cursor: isExecuting ? 'not-allowed' : 'pointer',
                                         fontWeight: 'bold',
-                                    }, children: isExecuting ? '⏳ Processing...' : '🚀 Execute Staging' })] })] }))] }) }));
+                                        fontSize: '16px',
+                                    }, children: isExecuting ? '⏳ Executing...' : '🚀 Execute Staging Process' })] })] }))] }) }));
 };
