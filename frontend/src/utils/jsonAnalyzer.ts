@@ -49,6 +49,7 @@ export class JsonAnalyzer {
 
     return {
       fields,
+      totalRecords: docsToAnalyze.length,
       totalDocuments: docsToAnalyze.length,
       analyzedAt: new Date(),
     };

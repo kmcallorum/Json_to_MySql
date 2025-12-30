@@ -55,8 +55,8 @@ export const App: React.FC = () => {
     if (config.fields && config.fields.length > 0) {
       setAnalysis({
         fields: config.fields,
+        totalRecords: 0,
         nestedStructures: [],
-        suggestedTables: [],
       });
     }
 

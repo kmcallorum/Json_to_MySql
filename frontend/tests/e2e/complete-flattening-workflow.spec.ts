@@ -58,7 +58,7 @@ test.describe('Complete JSON Flattening Workflow - BDD Style', () => {
     await loadConfiguration(page, configName);
 
     // THEN: Configuration is restored correctly
-    await expect(page.getByDisplayValue(configName)).toBeVisible({ timeout: 5000 });
+    await expect(page.locator(`input[value="${configName}"]`)).toBeVisible({ timeout: 5000 });
   });
 
   test('GIVEN a user builds filter conditions, WHEN they save as preset, THEN they can reuse the filter', async ({ page }) => {

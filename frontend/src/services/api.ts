@@ -27,12 +27,12 @@ export interface FilterPreset {
 }
 
 export const api = {
-  async testConnection(credentials: {
-    host: string;
-    port: number;
-    user: string;
-    password: string;
-    database: string;
+  async testConnection(credentials?: {
+    host?: string;
+    port?: number;
+    user?: string;
+    password?: string;
+    database?: string;
   }) {
     const response = await fetch(`${API_URL}/analysis/test-connection`, {
       method: 'POST',
