@@ -2,7 +2,7 @@ import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { api } from '../../../src/services/api';
 
 // Mock global fetch
-global.fetch = jest.fn();
+global.fetch = jest.fn() as any;
 
 describe('API Service', () => {
   beforeEach(() => {
@@ -12,7 +12,7 @@ describe('API Service', () => {
   describe('testConnection', () => {
     it('should test connection with credentials', async () => {
       const mockResponse = { success: true, message: 'Connected' };
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as any).mockResolvedValue({
         json: async () => mockResponse
       });
 
@@ -39,7 +39,7 @@ describe('API Service', () => {
 
     it('should test connection without credentials', async () => {
       const mockResponse = { success: true };
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as any).mockResolvedValue({
         json: async () => mockResponse
       });
 
@@ -53,7 +53,7 @@ describe('API Service', () => {
   describe('discoverFields', () => {
     it('should discover fields with custom sample size', async () => {
       const mockResponse = { success: true, fields: [] };
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as any).mockResolvedValue({
         json: async () => mockResponse
       });
 
@@ -72,13 +72,13 @@ describe('API Service', () => {
 
     it('should use default sample size of 1000', async () => {
       const mockResponse = { success: true, fields: [] };
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as any).mockResolvedValue({
         json: async () => mockResponse
       });
 
       await api.discoverFields('test_table');
 
-      const callArgs = (global.fetch as jest.Mock).mock.calls[0];
+      const callArgs = (global.fetch as any).mock.calls[0];
       const body = JSON.parse(callArgs[1].body);
       expect(body.sampleSize).toBe(1000);
     });
@@ -87,14 +87,14 @@ describe('API Service', () => {
   describe('analyze', () => {
     it('should analyze with request data', async () => {
       const mockResponse = { success: true, analysis: {} };
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as any).mockResolvedValue({
         json: async () => mockResponse
       });
 
       const request = {
         baseTableName: 'test_table',
         sampleSize: 100,
-        whereConditions: [{ field: 'status', operator: '=', value: 'active' }]
+        whereConditions: [{ field: 'status', operator: '=' as const, value: 'active' }]
       };
 
       const result = await api.analyze(request);
@@ -114,7 +114,7 @@ describe('API Service', () => {
   describe('getTableList', () => {
     it('should get list of tables', async () => {
       const mockResponse = { success: true, tables: ['users', 'posts'] };
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as any).mockResolvedValue({
         json: async () => mockResponse
       });
 
@@ -134,7 +134,7 @@ describe('API Service', () => {
   describe('getTableStructures', () => {
     it('should get table structures for multiple tables', async () => {
       const mockResponse = { success: true, tables: [] };
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as any).mockResolvedValue({
         json: async () => mockResponse
       });
 
@@ -156,7 +156,7 @@ describe('API Service', () => {
   describe('saveMappingConfig', () => {
     it('should save mapping configuration', async () => {
       const mockResponse = { success: true, message: 'Saved' };
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as any).mockResolvedValue({
         json: async () => mockResponse
       });
 
@@ -188,7 +188,7 @@ describe('API Service', () => {
   describe('loadMappingConfig', () => {
     it('should load mapping configuration', async () => {
       const mockResponse = { success: true, config: {} };
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as any).mockResolvedValue({
         json: async () => mockResponse
       });
 
@@ -206,13 +206,13 @@ describe('API Service', () => {
 
     it('should encode special characters in mapping name', async () => {
       const mockResponse = { success: true, config: {} };
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as any).mockResolvedValue({
         json: async () => mockResponse
       });
 
       await api.loadMappingConfig('test mapping with spaces');
 
-      const callArgs = (global.fetch as jest.Mock).mock.calls[0];
+      const callArgs = (global.fetch as any).mock.calls[0];
       expect(callArgs[0]).toContain('test%20mapping%20with%20spaces');
     });
   });
@@ -220,7 +220,7 @@ describe('API Service', () => {
   describe('listMappingConfigs', () => {
     it('should list all mapping configurations', async () => {
       const mockResponse = { success: true, configs: [] };
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as any).mockResolvedValue({
         json: async () => mockResponse
       });
 
@@ -240,7 +240,7 @@ describe('API Service', () => {
   describe('findMappingsByTables', () => {
     it('should find mappings by table names', async () => {
       const mockResponse = { success: true, mappings: [] };
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as any).mockResolvedValue({
         json: async () => mockResponse
       });
 
@@ -260,7 +260,7 @@ describe('API Service', () => {
 
     it('should find mappings with base table name', async () => {
       const mockResponse = { success: true, mappings: [] };
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as any).mockResolvedValue({
         json: async () => mockResponse
       });
 
@@ -269,7 +269,7 @@ describe('API Service', () => {
       const result = await api.findMappingsByTables(tableNames, baseTableName);
 
       expect(result).toEqual(mockResponse);
-      const callArgs = (global.fetch as jest.Mock).mock.calls[0];
+      const callArgs = (global.fetch as any).mock.calls[0];
       const body = JSON.parse(callArgs[1].body);
       expect(body.baseTableName).toBe(baseTableName);
     });
@@ -278,7 +278,7 @@ describe('API Service', () => {
   describe('deleteMappingConfig', () => {
     it('should delete mapping configuration', async () => {
       const mockResponse = { success: true, message: 'Deleted' };
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as any).mockResolvedValue({
         json: async () => mockResponse
       });
 
@@ -296,13 +296,13 @@ describe('API Service', () => {
 
     it('should encode special characters in mapping name for delete', async () => {
       const mockResponse = { success: true };
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as any).mockResolvedValue({
         json: async () => mockResponse
       });
 
       await api.deleteMappingConfig('test/mapping');
 
-      const callArgs = (global.fetch as jest.Mock).mock.calls[0];
+      const callArgs = (global.fetch as any).mock.calls[0];
       expect(callArgs[0]).toContain('test%2Fmapping');
     });
   });
@@ -310,7 +310,7 @@ describe('API Service', () => {
   describe('saveFilterPreset', () => {
     it('should save filter preset', async () => {
       const mockResponse = { success: true, message: 'Saved' };
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as any).mockResolvedValue({
         json: async () => mockResponse
       });
 
@@ -338,7 +338,7 @@ describe('API Service', () => {
   describe('loadFilterPreset', () => {
     it('should load filter preset', async () => {
       const mockResponse = { success: true, preset: {} };
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as any).mockResolvedValue({
         json: async () => mockResponse
       });
 
@@ -358,7 +358,7 @@ describe('API Service', () => {
   describe('listFilterPresets', () => {
     it('should list all filter presets without base table name', async () => {
       const mockResponse = { success: true, presets: [] };
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as any).mockResolvedValue({
         json: async () => mockResponse
       });
 
@@ -376,26 +376,26 @@ describe('API Service', () => {
 
     it('should list filter presets with base table name filter', async () => {
       const mockResponse = { success: true, presets: [] };
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as any).mockResolvedValue({
         json: async () => mockResponse
       });
 
       const result = await api.listFilterPresets('users');
 
       expect(result).toEqual(mockResponse);
-      const callArgs = (global.fetch as jest.Mock).mock.calls[0];
+      const callArgs = (global.fetch as any).mock.calls[0];
       expect(callArgs[0]).toBe('http://localhost:3001/api/filters/list?baseTableName=users');
     });
 
     it('should encode special characters in base table name', async () => {
       const mockResponse = { success: true, presets: [] };
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as any).mockResolvedValue({
         json: async () => mockResponse
       });
 
       await api.listFilterPresets('test table');
 
-      const callArgs = (global.fetch as jest.Mock).mock.calls[0];
+      const callArgs = (global.fetch as any).mock.calls[0];
       expect(callArgs[0]).toContain('test%20table');
     });
   });
@@ -403,7 +403,7 @@ describe('API Service', () => {
   describe('deleteFilterPreset', () => {
     it('should delete filter preset', async () => {
       const mockResponse = { success: true, message: 'Deleted' };
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as any).mockResolvedValue({
         json: async () => mockResponse
       });
 
@@ -423,7 +423,7 @@ describe('API Service', () => {
   describe('executeFlattening', () => {
     it('should execute flattening operation', async () => {
       const mockResponse = { success: true, message: 'Executed' };
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as any).mockResolvedValue({
         json: async () => mockResponse
       });
 
@@ -451,7 +451,7 @@ describe('API Service', () => {
 
     it('should execute flattening without optional fields', async () => {
       const mockResponse = { success: true };
-      (global.fetch as jest.Mock).mockResolvedValue({
+      (global.fetch as any).mockResolvedValue({
         json: async () => mockResponse
       });
 
@@ -465,7 +465,7 @@ describe('API Service', () => {
       const result = await api.executeFlattening(data);
 
       expect(result).toEqual(mockResponse);
-      const callArgs = (global.fetch as jest.Mock).mock.calls[0];
+      const callArgs = (global.fetch as any).mock.calls[0];
       const body = JSON.parse(callArgs[1].body);
       expect(body.relationships).toBeUndefined();
       expect(body.batchSize).toBeUndefined();
