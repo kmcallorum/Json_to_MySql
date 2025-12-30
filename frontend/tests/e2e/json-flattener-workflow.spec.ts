@@ -89,7 +89,7 @@ test.describe('JSON to SQL Flattener - Full User Workflow', () => {
     await testConnectionBtn.click();
 
     // Verify connection success
-    await expect(page.getByText(/Connected/i)).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText(/Connected/i)).toBeVisible({ timeout: 3000 });
 
     // Step 3: Discover Fields
     await expect(page.getByText('Step 2: Discover Fields')).toBeVisible();
@@ -104,7 +104,7 @@ test.describe('JSON to SQL Flattener - Full User Workflow', () => {
     await discoverBtn.click();
 
     // Wait for fields to be discovered
-    await expect(page.getByText(/Discovered \d+ fields/i)).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText(/Discovered \d+ fields/i)).toBeVisible({ timeout: 3000 });
 
     // Step 4: Verify WHERE conditions builder appears
     await expect(page.getByText(/Step 3:/i)).toBeVisible({ timeout: 3000 });
@@ -168,7 +168,7 @@ test.describe('JSON to SQL Flattener - Full User Workflow', () => {
     await testConnectionBtn.click();
 
     // Verify error message appears
-    await expect(page.getByText(/Database connection failed/i)).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText(/Database connection failed/i)).toBeVisible({ timeout: 3000 });
     await expect(page.getByText(/Failed/i)).toBeVisible();
   });
 
@@ -232,7 +232,7 @@ test.describe('JSON to SQL Flattener - Full User Workflow', () => {
     await page.waitForTimeout(1000);
 
     // Verify filter section appears
-    await expect(page.getByText(/Build WHERE Conditions/i)).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText(/Build WHERE Conditions/i)).toBeVisible({ timeout: 3000 });
 
     // Look for save/load filter preset buttons
     const savePresetBtn = page.getByRole('button', { name: /Save Filter Preset/i });
