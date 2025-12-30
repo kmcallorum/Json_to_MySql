@@ -20,7 +20,8 @@ export class DatabaseConnection {
       database: config.database,
       waitForConnections: true,
       connectionLimit: 10,
-      queueLimit: 0
+      queueLimit: 0,
+      connectTimeout: 10000 // 10 seconds to establish connection
     });
   }
 

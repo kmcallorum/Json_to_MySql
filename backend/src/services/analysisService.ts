@@ -101,8 +101,10 @@ export class AnalysisService {
   }> {
     const startTime = Date.now();
     console.log(`[ANALYZE] Starting analysis for ${baseTableName} with sampleSize=${sampleSize}`);
+    console.log(`[ANALYZE] whereConditions:`, JSON.stringify(whereConditions));
 
     // Build WHERE clause from conditions
+    console.log(`[ANALYZE] Building WHERE clause...`);
     let whereClause = '';
     const queryParams: any[] = [];
 
@@ -133,17 +135,28 @@ export class AnalysisService {
         whereClause = 'WHERE ' + clauses.join(' AND ');
       }
     }
+    console.log(`[ANALYZE] WHERE clause built: ${whereClause}`);
+    console.log(`[ANALYZE] Query params:`, queryParams);
 
-    // Get total count
-    const countStartTime = Date.now();
-    const countSql = `SELECT COUNT(*) as total FROM ${baseTableName} ${whereClause}`;
-    const countResult = await this.db.query<any>(countSql, queryParams);
-    const totalRecordsInTable = countResult[0]?.total || 0;
-    console.log(`[ANALYZE] COUNT query took ${Date.now() - countStartTime}ms. Total records: ${totalRecordsInTable}`);
+    // Get total count - Skip if there are WHERE conditions as JSON_EXTRACT queries are very slow
+    let totalRecordsInTable = 0;
+    if (whereConditions.length === 0) {
+      const countStartTime = Date.now();
+      const countSql = `SELECT COUNT(*) as total FROM ${baseTableName}`;
+      console.log(`[ANALYZE] Executing COUNT query: ${countSql}`);
+      const countResult = await this.db.query<any>(countSql, []);
+      totalRecordsInTable = countResult[0]?.total || 0;
+      console.log(`[ANALYZE] COUNT query took ${Date.now() - countStartTime}ms. Total records: ${totalRecordsInTable}`);
+    } else {
+      console.log(`[ANALYZE] Skipping COUNT query (has WHERE conditions - would be too slow)`);
+      totalRecordsInTable = -1; // Indicator that count was skipped
+    }
 
     // Get sample records
     const selectStartTime = Date.now();
     const sampleSql = `SELECT content FROM ${baseTableName} ${whereClause} LIMIT ${sampleSize}`;
+    console.log(`[ANALYZE] Executing SELECT query: ${sampleSql}`);
+    console.log(`[ANALYZE] About to execute db.query for SELECT...`);
     const records = await this.db.query<any>(sampleSql, queryParams);
     console.log(`[ANALYZE] SELECT query took ${Date.now() - selectStartTime}ms. Retrieved ${records.length} records`);
 
