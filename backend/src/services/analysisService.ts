@@ -191,6 +191,7 @@ export class AnalysisService {
       suggestedType: this.suggestSqlType(field),
     }));
     console.log(`[ANALYZE] Conversion and suggestions took ${Date.now() - conversionStartTime}ms. Found ${fields.length} fields`);
+    console.log(`[ANALYZE] Field paths detected:`, fields.map(f => f.path).sort());
 
     console.log(`[ANALYZE] Total analysis time: ${Date.now() - startTime}ms`);
 
