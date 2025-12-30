@@ -10,6 +10,7 @@ export const StagingWorkflow = ({ sourceTables: propsSourceTables, onClose, }) =
     const [stagingTables, setStagingTables] = useState([]);
     const [mappings, setMappings] = useState([]);
     const [relationships, setRelationships] = useState([]);
+    const [whereConditions, setWhereConditions] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isExecuting, setIsExecuting] = useState(false);
     const [message, setMessage] = useState('');
@@ -52,7 +53,7 @@ export const StagingWorkflow = ({ sourceTables: propsSourceTables, onClose, }) =
             const result = await api.analyzeTables(selectedSourceTables);
             if (result.success) {
                 setSourceTables(result.tables);
-                setCurrentStep('select-staging');
+                setCurrentStep('where-clause');
             }
             else {
                 setMessage(`Error: ${result.error}`);
@@ -64,6 +65,9 @@ export const StagingWorkflow = ({ sourceTables: propsSourceTables, onClose, }) =
         finally {
             setIsLoading(false);
         }
+    };
+    const handleWhereClauseComplete = () => {
+        setCurrentStep('select-staging');
     };
     const handleStagingTablesSelected = (tables) => {
         setStagingTables(tables);
@@ -102,6 +106,7 @@ export const StagingWorkflow = ({ sourceTables: propsSourceTables, onClose, }) =
                 mappings,
                 relationships,
                 sourceTables: sourceTableNames,
+                whereConditions,
                 batchSize: 100,
             });
             if (copyResult.success) {
@@ -122,7 +127,7 @@ export const StagingWorkflow = ({ sourceTables: propsSourceTables, onClose, }) =
         }
     };
     const handleBack = () => {
-        const steps = ['select-source', 'select-staging', 'map-columns', 'define-relationships', 'execute'];
+        const steps = ['select-source', 'where-clause', 'select-staging', 'map-columns', 'define-relationships', 'execute'];
         const currentIndex = steps.indexOf(currentStep);
         if (currentIndex > 0) {
             // Skip select-source if we had props source tables
@@ -226,7 +231,85 @@ export const StagingWorkflow = ({ sourceTables: propsSourceTables, onClose, }) =
                                         borderRadius: '4px',
                                         cursor: selectedSourceTables.length > 0 ? 'pointer' : 'not-allowed',
                                         fontWeight: 'bold',
-                                    }, children: "Continue to Staging Tables \u2192" })] }))] })), currentStep === 'select-staging' && (_jsxs("div", { children: [_jsx(StagingTableSelector, { sourceTableNames: sourceTables.map(t => t.tableName), onTablesSelected: handleStagingTablesSelected }), sourceTables.length > 0 && (_jsx("button", { onClick: handleBack, style: {
+                                    }, children: "Continue to Staging Tables \u2192" })] }))] })), currentStep === 'where-clause' && (_jsxs("div", { children: [_jsx("h3", { children: "Step 2: WHERE Conditions (Optional)" }), _jsx("p", { style: { color: '#666' }, children: "Add conditions to filter source data (e.g., milestoneId IS NOT NULL)." }), _jsxs("div", { style: { marginBottom: '20px' }, children: [whereConditions.map((condition, index) => (_jsxs("div", { style: {
+                                        display: 'flex',
+                                        gap: '10px',
+                                        marginBottom: '10px',
+                                        padding: '10px',
+                                        backgroundColor: '#f8f9fa',
+                                        borderRadius: '4px',
+                                    }, children: [_jsx("input", { type: "text", placeholder: "Field name (e.g., milestoneId)", value: condition.field, onChange: e => {
+                                                const updated = [...whereConditions];
+                                                updated[index].field = e.target.value;
+                                                setWhereConditions(updated);
+                                            }, style: {
+                                                flex: 1,
+                                                padding: '8px',
+                                                border: '1px solid #ccc',
+                                                borderRadius: '4px',
+                                            } }), _jsxs("select", { value: condition.operator, onChange: e => {
+                                                const updated = [...whereConditions];
+                                                updated[index].operator = e.target.value;
+                                                setWhereConditions(updated);
+                                            }, style: {
+                                                padding: '8px',
+                                                border: '1px solid #ccc',
+                                                borderRadius: '4px',
+                                            }, children: [_jsx("option", { value: "=", children: "= (equals)" }), _jsx("option", { value: "!=", children: "!= (not equals)" }), _jsx("option", { value: ">", children: " > (greater than)" }), _jsx("option", { value: "<", children: "< (less than)" }), _jsx("option", { value: "IS NOT NULL", children: "IS NOT NULL" }), _jsx("option", { value: "IS NULL", children: "IS NULL" })] }), !['IS NOT NULL', 'IS NULL'].includes(condition.operator) && (_jsx("input", { type: "text", placeholder: "Value", value: condition.value || '', onChange: e => {
+                                                const updated = [...whereConditions];
+                                                updated[index].value = e.target.value;
+                                                setWhereConditions(updated);
+                                            }, style: {
+                                                flex: 1,
+                                                padding: '8px',
+                                                border: '1px solid #ccc',
+                                                borderRadius: '4px',
+                                            } })), _jsx("button", { onClick: () => {
+                                                setWhereConditions(whereConditions.filter((_, i) => i !== index));
+                                            }, style: {
+                                                padding: '8px 16px',
+                                                backgroundColor: '#dc3545',
+                                                color: 'white',
+                                                border: 'none',
+                                                borderRadius: '4px',
+                                                cursor: 'pointer',
+                                            }, children: "Remove" })] }, index))), _jsx("button", { onClick: () => {
+                                        setWhereConditions([
+                                            ...whereConditions,
+                                            { field: '', operator: 'IS NOT NULL', value: '' },
+                                        ]);
+                                    }, style: {
+                                        padding: '10px 20px',
+                                        backgroundColor: '#007bff',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '4px',
+                                        cursor: 'pointer',
+                                    }, children: "+ Add Condition" })] }), whereConditions.length > 0 && (_jsxs("div", { style: {
+                                marginBottom: '20px',
+                                padding: '15px',
+                                backgroundColor: '#d4edda',
+                                borderRadius: '4px',
+                            }, children: [_jsx("strong", { children: "WHERE Clause Preview:" }), _jsx("div", { style: { marginTop: '10px', fontFamily: 'monospace', fontSize: '14px' }, children: whereConditions
+                                        .map(c => ['IS NOT NULL', 'IS NULL'].includes(c.operator)
+                                        ? `${c.field} ${c.operator}`
+                                        : `${c.field} ${c.operator} '${c.value}'`)
+                                        .join(' AND ') })] })), _jsxs("div", { style: { display: 'flex', gap: '10px' }, children: [_jsx("button", { onClick: handleBack, style: {
+                                        padding: '10px 20px',
+                                        backgroundColor: '#6c757d',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '4px',
+                                        cursor: 'pointer',
+                                    }, children: "\u2190 Back" }), _jsx("button", { onClick: handleWhereClauseComplete, style: {
+                                        padding: '12px 24px',
+                                        backgroundColor: '#28a745',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '4px',
+                                        cursor: 'pointer',
+                                        fontWeight: 'bold',
+                                    }, children: "Continue to Staging Tables \u2192" })] })] })), currentStep === 'select-staging' && (_jsxs("div", { children: [_jsx(StagingTableSelector, { sourceTableNames: sourceTables.map(t => t.tableName), onTablesSelected: handleStagingTablesSelected }), sourceTables.length > 0 && (_jsx("button", { onClick: handleBack, style: {
                                 marginTop: '10px',
                                 padding: '10px 20px',
                                 backgroundColor: '#6c757d',

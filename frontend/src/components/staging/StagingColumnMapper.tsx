@@ -40,19 +40,38 @@ export const StagingColumnMapper: React.FC<StagingColumnMapperProps> = ({
       targetColumn,
     };
 
-    const updated = [
-      ...mappings.filter(
-        m => !(m.sourceTable === draggedColumn.tableName && m.sourceColumn === draggedColumn.columnName)
-      ),
-      newMapping,
-    ];
+    // Check if this exact mapping already exists
+    const exists = mappings.some(
+      m =>
+        m.sourceTable === draggedColumn.tableName &&
+        m.sourceColumn === draggedColumn.columnName &&
+        m.targetTable === targetTable &&
+        m.targetColumn === targetColumn
+    );
+
+    if (exists) {
+      alert('This mapping already exists');
+      setDraggedColumn(null);
+      return;
+    }
+
+    // Allow multiple mappings from the same source column
+    const updated = [...mappings, newMapping];
 
     setMappings(updated);
     onMappingsChange(updated);
     setDraggedColumn(null);
   };
 
-  const removeMapping = (sourceTable: string, sourceColumn: string) => {
+  const removeMapping = (sourceTable: string, sourceColumn: string, targetTable: string, targetColumn: string) => {
+    const updated = mappings.filter(
+      m => !(m.sourceTable === sourceTable && m.sourceColumn === sourceColumn && m.targetTable === targetTable && m.targetColumn === targetColumn)
+    );
+    setMappings(updated);
+    onMappingsChange(updated);
+  };
+
+  const removeAllMappings = (sourceTable: string, sourceColumn: string) => {
     const updated = mappings.filter(
       m => !(m.sourceTable === sourceTable && m.sourceColumn === sourceColumn)
     );
@@ -64,8 +83,8 @@ export const StagingColumnMapper: React.FC<StagingColumnMapperProps> = ({
     return mappings.some(m => m.sourceTable === sourceTable && m.sourceColumn === sourceColumn);
   };
 
-  const getMappingFor = (sourceTable: string, sourceColumn: string) => {
-    return mappings.find(m => m.sourceTable === sourceTable && m.sourceColumn === sourceColumn);
+  const getMappingsFor = (sourceTable: string, sourceColumn: string) => {
+    return mappings.filter(m => m.sourceTable === sourceTable && m.sourceColumn === sourceColumn);
   };
 
   return (
@@ -99,7 +118,7 @@ export const StagingColumnMapper: React.FC<StagingColumnMapperProps> = ({
 
               <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
                 {table.columns?.map((col: any) => {
-                  const mapping = getMappingFor(table.tableName, col.name);
+                  const columnMappings = getMappingsFor(table.tableName, col.name);
                   return (
                     <div
                       key={col.name}
@@ -119,28 +138,42 @@ export const StagingColumnMapper: React.FC<StagingColumnMapperProps> = ({
                           <div style={{ fontWeight: 'bold' }}>{col.name}</div>
                           <div style={{ fontSize: '12px', color: '#666' }}>{col.type}</div>
                         </div>
-                        {mapping && (
-                          <div style={{ fontSize: '12px', color: '#28a745' }}>
-                            → {mapping.targetTable}.{mapping.targetColumn}
-                          </div>
-                        )}
                       </div>
-                      {mapping && (
-                        <button
-                          onClick={() => removeMapping(table.tableName, col.name)}
-                          style={{
-                            marginTop: '5px',
-                            padding: '4px 8px',
-                            backgroundColor: '#dc3545',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '3px',
-                            cursor: 'pointer',
-                            fontSize: '11px',
-                          }}
-                        >
-                          Remove Mapping
-                        </button>
+                      {columnMappings.length > 0 && (
+                        <div style={{ marginTop: '8px' }}>
+                          {columnMappings.map((mapping, idx) => (
+                            <div
+                              key={idx}
+                              style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                marginTop: idx > 0 ? '4px' : 0,
+                                padding: '4px 8px',
+                                backgroundColor: '#e7f3e7',
+                                borderRadius: '3px',
+                              }}
+                            >
+                              <div style={{ fontSize: '12px', color: '#28a745' }}>
+                                → {mapping.targetTable}.{mapping.targetColumn}
+                              </div>
+                              <button
+                                onClick={() => removeMapping(table.tableName, col.name, mapping.targetTable, mapping.targetColumn)}
+                                style={{
+                                  padding: '2px 6px',
+                                  backgroundColor: '#dc3545',
+                                  color: 'white',
+                                  border: 'none',
+                                  borderRadius: '2px',
+                                  cursor: 'pointer',
+                                  fontSize: '10px',
+                                }}
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          ))}
+                        </div>
                       )}
                     </div>
                   );

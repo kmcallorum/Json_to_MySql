@@ -9,7 +9,7 @@ interface StagingWorkflowProps {
   onClose: () => void;
 }
 
-type StagingStep = 'select-source' | 'select-staging' | 'map-columns' | 'define-relationships' | 'execute';
+type StagingStep = 'select-source' | 'where-clause' | 'select-staging' | 'map-columns' | 'define-relationships' | 'execute';
 
 export const StagingWorkflow: React.FC<StagingWorkflowProps> = ({
   sourceTables: propsSourceTables,
@@ -20,6 +20,7 @@ export const StagingWorkflow: React.FC<StagingWorkflowProps> = ({
   const [stagingTables, setStagingTables] = useState<any[]>([]);
   const [mappings, setMappings] = useState<any[]>([]);
   const [relationships, setRelationships] = useState<any[]>([]);
+  const [whereConditions, setWhereConditions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isExecuting, setIsExecuting] = useState(false);
   const [message, setMessage] = useState('');
@@ -63,7 +64,7 @@ export const StagingWorkflow: React.FC<StagingWorkflowProps> = ({
       const result = await api.analyzeTables(selectedSourceTables);
       if (result.success) {
         setSourceTables(result.tables);
-        setCurrentStep('select-staging');
+        setCurrentStep('where-clause');
       } else {
         setMessage(`Error: ${result.error}`);
       }
@@ -72,6 +73,10 @@ export const StagingWorkflow: React.FC<StagingWorkflowProps> = ({
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleWhereClauseComplete = () => {
+    setCurrentStep('select-staging');
   };
 
   const handleStagingTablesSelected = (tables: any[]) => {
@@ -121,6 +126,7 @@ export const StagingWorkflow: React.FC<StagingWorkflowProps> = ({
         mappings,
         relationships,
         sourceTables: sourceTableNames,
+        whereConditions,
         batchSize: 100,
       });
 
@@ -143,7 +149,7 @@ export const StagingWorkflow: React.FC<StagingWorkflowProps> = ({
   };
 
   const handleBack = () => {
-    const steps: StagingStep[] = ['select-source', 'select-staging', 'map-columns', 'define-relationships', 'execute'];
+    const steps: StagingStep[] = ['select-source', 'where-clause', 'select-staging', 'map-columns', 'define-relationships', 'execute'];
     const currentIndex = steps.indexOf(currentStep);
     if (currentIndex > 0) {
       // Skip select-source if we had props source tables
@@ -343,7 +349,174 @@ export const StagingWorkflow: React.FC<StagingWorkflowProps> = ({
           </div>
         )}
 
-        {/* Step 2: Select Staging Tables */}
+        {/* Step 2: WHERE Clause (Optional) */}
+        {currentStep === 'where-clause' && (
+          <div>
+            <h3>Step 2: WHERE Conditions (Optional)</h3>
+            <p style={{ color: '#666' }}>
+              Add conditions to filter source data (e.g., milestoneId IS NOT NULL).
+            </p>
+
+            <div style={{ marginBottom: '20px' }}>
+              {whereConditions.map((condition, index) => (
+                <div
+                  key={index}
+                  style={{
+                    display: 'flex',
+                    gap: '10px',
+                    marginBottom: '10px',
+                    padding: '10px',
+                    backgroundColor: '#f8f9fa',
+                    borderRadius: '4px',
+                  }}
+                >
+                  <input
+                    type="text"
+                    placeholder="Field name (e.g., milestoneId)"
+                    value={condition.field}
+                    onChange={e => {
+                      const updated = [...whereConditions];
+                      updated[index].field = e.target.value;
+                      setWhereConditions(updated);
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: '8px',
+                      border: '1px solid #ccc',
+                      borderRadius: '4px',
+                    }}
+                  />
+                  <select
+                    value={condition.operator}
+                    onChange={e => {
+                      const updated = [...whereConditions];
+                      updated[index].operator = e.target.value;
+                      setWhereConditions(updated);
+                    }}
+                    style={{
+                      padding: '8px',
+                      border: '1px solid #ccc',
+                      borderRadius: '4px',
+                    }}
+                  >
+                    <option value="=">= (equals)</option>
+                    <option value="!=">!= (not equals)</option>
+                    <option value=">"> &gt; (greater than)</option>
+                    <option value="<">&lt; (less than)</option>
+                    <option value="IS NOT NULL">IS NOT NULL</option>
+                    <option value="IS NULL">IS NULL</option>
+                  </select>
+                  {!['IS NOT NULL', 'IS NULL'].includes(condition.operator) && (
+                    <input
+                      type="text"
+                      placeholder="Value"
+                      value={condition.value || ''}
+                      onChange={e => {
+                        const updated = [...whereConditions];
+                        updated[index].value = e.target.value;
+                        setWhereConditions(updated);
+                      }}
+                      style={{
+                        flex: 1,
+                        padding: '8px',
+                        border: '1px solid #ccc',
+                        borderRadius: '4px',
+                      }}
+                    />
+                  )}
+                  <button
+                    onClick={() => {
+                      setWhereConditions(whereConditions.filter((_, i) => i !== index));
+                    }}
+                    style={{
+                      padding: '8px 16px',
+                      backgroundColor: '#dc3545',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+
+              <button
+                onClick={() => {
+                  setWhereConditions([
+                    ...whereConditions,
+                    { field: '', operator: 'IS NOT NULL', value: '' },
+                  ]);
+                }}
+                style={{
+                  padding: '10px 20px',
+                  backgroundColor: '#007bff',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                }}
+              >
+                + Add Condition
+              </button>
+            </div>
+
+            {whereConditions.length > 0 && (
+              <div
+                style={{
+                  marginBottom: '20px',
+                  padding: '15px',
+                  backgroundColor: '#d4edda',
+                  borderRadius: '4px',
+                }}
+              >
+                <strong>WHERE Clause Preview:</strong>
+                <div style={{ marginTop: '10px', fontFamily: 'monospace', fontSize: '14px' }}>
+                  {whereConditions
+                    .map(c =>
+                      ['IS NOT NULL', 'IS NULL'].includes(c.operator)
+                        ? `${c.field} ${c.operator}`
+                        : `${c.field} ${c.operator} '${c.value}'`
+                    )
+                    .join(' AND ')}
+                </div>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                onClick={handleBack}
+                style={{
+                  padding: '10px 20px',
+                  backgroundColor: '#6c757d',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                }}
+              >
+                ← Back
+              </button>
+              <button
+                onClick={handleWhereClauseComplete}
+                style={{
+                  padding: '12px 24px',
+                  backgroundColor: '#28a745',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                }}
+              >
+                Continue to Staging Tables →
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Select Staging Tables */}
         {currentStep === 'select-staging' && (
           <div>
             <StagingTableSelector

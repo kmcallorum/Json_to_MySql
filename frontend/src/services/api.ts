@@ -195,6 +195,7 @@ export const api = {
     mappings: any[];
     relationships: any[];
     sourceTables: string[];
+    whereConditions?: any[];
     batchSize?: number;
   }) {
     const response = await fetch(`${API_URL}/staging/execute`, {

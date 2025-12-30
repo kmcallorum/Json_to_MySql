@@ -63,7 +63,7 @@ router.post('/create-tables', async (req, res) => {
 // Execute staging copy
 router.post('/execute', async (req, res) => {
   try {
-    const { mappings, relationships, sourceTables, batchSize = 100 } = req.body;
+    const { mappings, relationships, sourceTables, whereConditions, batchSize = 100 } = req.body;
 
     if (!mappings || !Array.isArray(mappings)) {
       return res.status(400).json({
@@ -84,6 +84,7 @@ router.post('/execute', async (req, res) => {
       mappings,
       relationships || [],
       sourceTables,
+      whereConditions || [],
       batchSize
     );
 
