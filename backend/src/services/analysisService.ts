@@ -171,6 +171,13 @@ export class AnalysisService {
         ? JSON.parse(record.content)
         : record.content;
 
+      // Debug: Log first record structure
+      if (recordCount === 0) {
+        console.log(`[ANALYZE] First record root keys:`, Object.keys(content));
+        console.log(`[ANALYZE] Has _id?`, '_id' in content);
+        console.log(`[ANALYZE] Has _source?`, '_source' in content);
+      }
+
       this.analyzeObject(content, '', fieldMap);
       recordCount++;
 
