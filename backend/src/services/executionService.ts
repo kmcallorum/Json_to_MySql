@@ -110,7 +110,7 @@ export class ExecutionService {
         : record.content;
 
       let recordSuccess = true;
-      const generatedIds = new Map<string, number>();
+      const generatedIds = new Map<string, number | string>();
 
       // Insert in dependency order
       for (const tableName of insertOrder) {
@@ -128,15 +128,15 @@ export class ExecutionService {
           // Extract values from JSON
           for (const mapping of tableMappings) {
             let value = this.extractValue(content, mapping.sourcePath);
-            
+
             // Find column definition
             const columnDef = tableDefinition?.columns.find((c: any) => c.name === mapping.targetColumn);
-            
+
             // Convert timestamps if needed
             if (columnDef && this.isDateTimeType(columnDef.type)) {
               value = this.convertToDateTime(value);
             }
-            
+
             values[mapping.targetColumn] = value;
           }
 
@@ -154,19 +154,37 @@ export class ExecutionService {
           // Build and execute INSERT query
           const columns = Object.keys(values);
           const escapedValues = Object.values(values).map(v => mysql.escape(v));
-          
+
           const insertQuery = `
-            INSERT INTO ${mysql.escapeId(tableName)} 
+            INSERT INTO ${mysql.escapeId(tableName)}
             (${columns.map(c => mysql.escapeId(c)).join(', ')})
             VALUES (${escapedValues.join(', ')})
           `;
 
           const result: any = await this.db.rawQuery<any>(insertQuery);
 
-          // Store generated ID for child tables
-          if (result && typeof result === 'object' && 'insertId' in result) {
-            generatedIds.set(tableName, result.insertId);
-            console.log(`✓ Inserted into ${tableName}, ID: ${result.insertId}`);
+          // Store ID for child tables (auto-increment OR from JSON)
+          let idToStore: number | string | undefined;
+
+          // First, try to get auto-increment ID
+          if (result && typeof result === 'object' && 'insertId' in result && result.insertId > 0) {
+            idToStore = result.insertId;
+            console.log(`✓ Inserted into ${tableName}, auto-increment ID: ${idToStore}`);
+          } else {
+            // If no auto-increment, check if this table is a parent with a mapped ID column
+            const parentRel = relationships.find(r => r.parentTable === tableName);
+            if (parentRel) {
+              // Get the parent key column value from the values we just inserted
+              const parentKeyValue = values[parentRel.parentKeyColumn];
+              if (parentKeyValue !== undefined && parentKeyValue !== null) {
+                idToStore = parentKeyValue;
+                console.log(`✓ Inserted into ${tableName}, ID from JSON: ${idToStore}`);
+              }
+            }
+          }
+
+          if (idToStore !== undefined) {
+            generatedIds.set(tableName, idToStore);
           }
 
         } catch (error: any) {
