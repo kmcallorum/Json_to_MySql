@@ -145,23 +145,33 @@ export class StagingService {
     const insertOrder = this.getInsertOrder(sourceTables, relationships);
     console.log('[STAGING] Insert order:', insertOrder);
 
-    // Build WHERE clause if conditions provided
-    let whereClause = '';
-    if (whereConditions && whereConditions.length > 0) {
+    // Build WHERE clause helper function for specific table
+    const buildWhereClauseForTable = (tableName: string): string => {
+      if (!whereConditions || whereConditions.length === 0) {
+        return '';
+      }
+
       const clauses: string[] = [];
       for (const condition of whereConditions) {
-        if (condition.operator === 'IS NOT NULL') {
-          clauses.push(`${mysql.escapeId(condition.field)} IS NOT NULL`);
-        } else if (condition.operator === 'IS NULL') {
-          clauses.push(`${mysql.escapeId(condition.field)} IS NULL`);
-        } else {
-          clauses.push(`${mysql.escapeId(condition.field)} ${condition.operator} ${mysql.escape(condition.value)}`);
+        // Parse table and column from field (format: "tableName.columnName")
+        const parts = condition.field.split('.');
+        const conditionTable = parts.length > 1 ? parts[0] : null;
+        const columnName = parts.length > 1 ? parts[1] : condition.field;
+
+        // Only apply condition if it's for this table (or no table specified)
+        if (!conditionTable || conditionTable === tableName) {
+          if (condition.operator === 'IS NOT NULL') {
+            clauses.push(`${mysql.escapeId(columnName)} IS NOT NULL`);
+          } else if (condition.operator === 'IS NULL') {
+            clauses.push(`${mysql.escapeId(columnName)} IS NULL`);
+          } else {
+            clauses.push(`${mysql.escapeId(columnName)} ${condition.operator} ${mysql.escape(condition.value)}`);
+          }
         }
       }
-      if (clauses.length > 0) {
-        whereClause = 'WHERE ' + clauses.join(' AND ');
-      }
-    }
+
+      return clauses.length > 0 ? 'WHERE ' + clauses.join(' AND ') : '';
+    };
 
     // Process each source table in dependency order
     for (const sourceTable of insertOrder) {
@@ -171,7 +181,8 @@ export class StagingService {
         continue;
       }
 
-      // Get all records from source table with WHERE clause
+      // Get all records from source table with table-specific WHERE clause
+      const whereClause = buildWhereClauseForTable(sourceTable);
       const selectSql = `SELECT * FROM ${mysql.escapeId(sourceTable)} ${whereClause} LIMIT ${batchSize}`;
       console.log(`[STAGING] Query: ${selectSql}`);
       const records = await this.db.rawQuery<any>(selectSql);

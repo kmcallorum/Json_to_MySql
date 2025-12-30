@@ -351,15 +351,18 @@ export const StagingWorkflow: React.FC<StagingWorkflowProps> = ({
 
         {/* Step 2: WHERE Clause (Optional) */}
         {currentStep === 'where-clause' && (() => {
-          // Build list of all available columns from source tables
-          const availableColumns: string[] = [];
+          // Build list of all available columns from source tables with table name prefix
+          const availableColumns: Array<{ display: string; value: string }> = [];
           sourceTables.forEach(table => {
             table.columns?.forEach((col: any) => {
-              availableColumns.push(col.name);
+              availableColumns.push({
+                display: `${table.tableName}.${col.name}`,
+                value: `${table.tableName}.${col.name}`
+              });
             });
           });
-          // Remove duplicates
-          const uniqueColumns = Array.from(new Set(availableColumns)).sort();
+          // Sort by display name
+          availableColumns.sort((a, b) => a.display.localeCompare(b.display));
 
           return (
             <div>
@@ -409,9 +412,9 @@ export const StagingWorkflow: React.FC<StagingWorkflowProps> = ({
                             }}
                           >
                             <option value="">-- Select Field --</option>
-                            {uniqueColumns.map(col => (
-                              <option key={col} value={col}>
-                                {col}
+                            {availableColumns.map(col => (
+                              <option key={col.value} value={col.value}>
+                                {col.display}
                               </option>
                             ))}
                           </select>

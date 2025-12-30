@@ -232,15 +232,18 @@ export const StagingWorkflow = ({ sourceTables: propsSourceTables, onClose, }) =
                                         cursor: selectedSourceTables.length > 0 ? 'pointer' : 'not-allowed',
                                         fontWeight: 'bold',
                                     }, children: "Continue to Staging Tables \u2192" })] }))] })), currentStep === 'where-clause' && (() => {
-                    // Build list of all available columns from source tables
+                    // Build list of all available columns from source tables with table name prefix
                     const availableColumns = [];
                     sourceTables.forEach(table => {
                         table.columns?.forEach((col) => {
-                            availableColumns.push(col.name);
+                            availableColumns.push({
+                                display: `${table.tableName}.${col.name}`,
+                                value: `${table.tableName}.${col.name}`
+                            });
                         });
                     });
-                    // Remove duplicates
-                    const uniqueColumns = Array.from(new Set(availableColumns)).sort();
+                    // Sort by display name
+                    availableColumns.sort((a, b) => a.display.localeCompare(b.display));
                     return (_jsxs("div", { children: [_jsx("h3", { children: "Step 2: WHERE Conditions (Optional)" }), _jsx("p", { style: { color: '#666' }, children: "Add conditions to filter source data (e.g., milestoneId IS NOT NULL)." }), whereConditions.length === 0 && (_jsx("p", { style: { color: '#666', fontStyle: 'italic', marginBottom: '20px' }, children: "No filters applied. Click \"Add Condition\" to filter your data." })), _jsxs("div", { style: { marginBottom: '20px' }, children: [whereConditions.map((condition, index) => {
                                         const showValueInput = !['IS NOT NULL', 'IS NULL'].includes(condition.operator);
                                         return (_jsx("div", { style: {
@@ -258,7 +261,7 @@ export const StagingWorkflow = ({ sourceTables: propsSourceTables, onClose, }) =
                                                                     padding: '8px',
                                                                     border: '1px solid #ccc',
                                                                     borderRadius: '4px',
-                                                                }, children: [_jsx("option", { value: "", children: "-- Select Field --" }), uniqueColumns.map(col => (_jsx("option", { value: col, children: col }, col)))] })] }), _jsxs("div", { style: { flex: '0 0 150px' }, children: [_jsx("label", { style: { display: 'block', fontSize: '12px', marginBottom: '5px', fontWeight: 'bold' }, children: "Operator" }), _jsxs("select", { value: condition.operator, onChange: e => {
+                                                                }, children: [_jsx("option", { value: "", children: "-- Select Field --" }), availableColumns.map(col => (_jsx("option", { value: col.value, children: col.display }, col.value)))] })] }), _jsxs("div", { style: { flex: '0 0 150px' }, children: [_jsx("label", { style: { display: 'block', fontSize: '12px', marginBottom: '5px', fontWeight: 'bold' }, children: "Operator" }), _jsxs("select", { value: condition.operator, onChange: e => {
                                                                     const updated = [...whereConditions];
                                                                     updated[index].operator = e.target.value;
                                                                     if (['IS NOT NULL', 'IS NULL'].includes(e.target.value)) {
