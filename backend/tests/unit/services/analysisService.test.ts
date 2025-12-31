@@ -292,16 +292,17 @@ describe('AnalysisService', () => {
         { field: '_source.type', operator: '=', value: 'event.test' }
       ];
 
-      mockDb.query
-        .mockResolvedValueOnce([{ total: 50 }])
-        .mockResolvedValueOnce([]);
+      // When WHERE conditions are present, COUNT query is skipped
+      mockDb.query.mockResolvedValueOnce([
+        { content: JSON.stringify({ _source: { type: 'event.test' } }) }
+      ]);
 
       await service.analyze('test_table', 100, whereConditions);
 
-      const countCall = (mockDb.query as jest.Mock).mock.calls[0];
-      expect(countCall[0]).toContain('WHERE');
-      expect(countCall[0]).toContain('JSON_UNQUOTE(JSON_EXTRACT(content, ?)) = ?');
-      expect(countCall[1]).toEqual(['$._source.type', 'event.test']);
+      const selectCall = (mockDb.query as jest.Mock).mock.calls[0];
+      expect(selectCall[0]).toContain('WHERE');
+      expect(selectCall[0]).toContain('JSON_UNQUOTE(JSON_EXTRACT(content, ?)) = ?');
+      expect(selectCall[1]).toEqual(['$._source.type', 'event.test']);
     });
 
     it('should build WHERE clause with != operator', async () => {
@@ -309,15 +310,16 @@ describe('AnalysisService', () => {
         { field: 'status', operator: '!=', value: 'failed' }
       ];
 
-      mockDb.query
-        .mockResolvedValueOnce([{ total: 50 }])
-        .mockResolvedValueOnce([]);
+      // When WHERE conditions are present, COUNT query is skipped
+      mockDb.query.mockResolvedValueOnce([
+        { content: JSON.stringify({ status: 'active' }) }
+      ]);
 
       await service.analyze('test_table', 100, whereConditions);
 
-      const countCall = (mockDb.query as jest.Mock).mock.calls[0];
-      expect(countCall[0]).toContain('!=');
-      expect(countCall[1]).toEqual(['$.status', 'failed']);
+      const selectCall = (mockDb.query as jest.Mock).mock.calls[0];
+      expect(selectCall[0]).toContain('!=');
+      expect(selectCall[1]).toEqual(['$.status', 'failed']);
     });
 
     it('should build WHERE clause with IS NULL operator', async () => {
@@ -325,15 +327,16 @@ describe('AnalysisService', () => {
         { field: 'optional_field', operator: 'IS NULL', value: null }
       ];
 
-      mockDb.query
-        .mockResolvedValueOnce([{ total: 50 }])
-        .mockResolvedValueOnce([]);
+      // When WHERE conditions are present, COUNT query is skipped
+      mockDb.query.mockResolvedValueOnce([
+        { content: JSON.stringify({ name: 'test' }) }
+      ]);
 
       await service.analyze('test_table', 100, whereConditions);
 
-      const countCall = (mockDb.query as jest.Mock).mock.calls[0];
-      expect(countCall[0]).toContain('IS NULL');
-      expect(countCall[1]).toEqual([]);
+      const selectCall = (mockDb.query as jest.Mock).mock.calls[0];
+      expect(selectCall[0]).toContain('IS NULL');
+      expect(selectCall[1]).toEqual([]);
     });
 
     it('should build WHERE clause with IS NOT NULL operator', async () => {
@@ -341,14 +344,15 @@ describe('AnalysisService', () => {
         { field: 'required_field', operator: 'IS NOT NULL', value: null }
       ];
 
-      mockDb.query
-        .mockResolvedValueOnce([{ total: 50 }])
-        .mockResolvedValueOnce([]);
+      // When WHERE conditions are present, COUNT query is skipped
+      mockDb.query.mockResolvedValueOnce([
+        { content: JSON.stringify({ required_field: 'value' }) }
+      ]);
 
       await service.analyze('test_table', 100, whereConditions);
 
-      const countCall = (mockDb.query as jest.Mock).mock.calls[0];
-      expect(countCall[0]).toContain('IS NOT NULL');
+      const selectCall = (mockDb.query as jest.Mock).mock.calls[0];
+      expect(selectCall[0]).toContain('IS NOT NULL');
     });
 
     it('should build WHERE clause with LIKE operator', async () => {
@@ -356,15 +360,16 @@ describe('AnalysisService', () => {
         { field: 'name', operator: 'LIKE', value: 'test' }
       ];
 
-      mockDb.query
-        .mockResolvedValueOnce([{ total: 50 }])
-        .mockResolvedValueOnce([]);
+      // When WHERE conditions are present, COUNT query is skipped
+      mockDb.query.mockResolvedValueOnce([
+        { content: JSON.stringify({ name: 'test123' }) }
+      ]);
 
       await service.analyze('test_table', 100, whereConditions);
 
-      const countCall = (mockDb.query as jest.Mock).mock.calls[0];
-      expect(countCall[0]).toContain('LIKE');
-      expect(countCall[1]).toEqual(['$.name', '%test%']);
+      const selectCall = (mockDb.query as jest.Mock).mock.calls[0];
+      expect(selectCall[0]).toContain('LIKE');
+      expect(selectCall[1]).toEqual(['$.name', '%test%']);
     });
 
     it('should build WHERE clause with IN operator', async () => {
@@ -372,15 +377,16 @@ describe('AnalysisService', () => {
         { field: 'status', operator: 'IN', value: ['active', 'pending', 'completed'] }
       ];
 
-      mockDb.query
-        .mockResolvedValueOnce([{ total: 50 }])
-        .mockResolvedValueOnce([]);
+      // When WHERE conditions are present, COUNT query is skipped
+      mockDb.query.mockResolvedValueOnce([
+        { content: JSON.stringify({ status: 'active' }) }
+      ]);
 
       await service.analyze('test_table', 100, whereConditions);
 
-      const countCall = (mockDb.query as jest.Mock).mock.calls[0];
-      expect(countCall[0]).toContain('IN (?, ?, ?)');
-      expect(countCall[1]).toEqual(['$.status', 'active', 'pending', 'completed']);
+      const selectCall = (mockDb.query as jest.Mock).mock.calls[0];
+      expect(selectCall[0]).toContain('IN (?, ?, ?)');
+      expect(selectCall[1]).toEqual(['$.status', 'active', 'pending', 'completed']);
     });
 
     it('should combine multiple WHERE conditions with AND', async () => {
@@ -389,14 +395,15 @@ describe('AnalysisService', () => {
         { field: 'status', operator: '!=', value: 'failed' }
       ];
 
-      mockDb.query
-        .mockResolvedValueOnce([{ total: 50 }])
-        .mockResolvedValueOnce([]);
+      // When WHERE conditions are present, COUNT query is skipped
+      mockDb.query.mockResolvedValueOnce([
+        { content: JSON.stringify({ type: 'event.test', status: 'active' }) }
+      ]);
 
       await service.analyze('test_table', 100, whereConditions);
 
-      const countCall = (mockDb.query as jest.Mock).mock.calls[0];
-      expect(countCall[0]).toContain('AND');
+      const selectCall = (mockDb.query as jest.Mock).mock.calls[0];
+      expect(selectCall[0]).toContain('AND');
     });
 
     it('should track field types and samples', async () => {

@@ -162,7 +162,7 @@ export class AnalysisService {
     console.log(`[ANALYZE] SELECT query took ${Date.now() - selectStartTime}ms. Retrieved ${records.length} records`);
 
     // Debug: Check raw record structure
-    if (records.length > 0) {
+    if (records.length > 0 && records[0].content !== undefined) {
       console.log(`[ANALYZE] First record type:`, typeof records[0].content);
       console.log(`[ANALYZE] First record content (raw):`, JSON.stringify(records[0].content).substring(0, 500));
     }
