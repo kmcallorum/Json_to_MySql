@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const http = require('http');
+import http from 'http';
 
 const CONFIG_NAME = process.argv[2] || '2nd';
 const API_URL = 'http://localhost:3001';
@@ -44,8 +44,14 @@ async function runETL() {
   try {
     // Load mapping config (includes filters, mappings, and relationships)
     console.log('1️⃣  Loading configuration...');
-    const config = await request(`/api/mappings/configs/${CONFIG_NAME}`);
-    
+    const response = await request(`/api/mappings/load/${CONFIG_NAME}`);
+
+    if (!response.success || !response.config) {
+      throw new Error(`Failed to load config: ${response.error || 'Unknown error'}`);
+    }
+
+    const config = response.config;
+
     if (!config || !config.mappings) {
       throw new Error(`Invalid config: ${JSON.stringify(config)}`);
     }

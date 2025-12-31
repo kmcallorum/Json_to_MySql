@@ -1,6 +1,7 @@
 import express from 'express';
 import { container } from 'tsyringe';
 import { StagingService } from '../services/stagingService.js';
+import { StagingConfigService } from '../services/stagingConfigService.js';
 
 const router = express.Router();
 
@@ -98,6 +99,62 @@ router.post('/execute', async (req, res) => {
       success: false,
       error: error.message
     });
+  }
+});
+
+// Save staging configuration
+router.post('/configs/save', async (req, res) => {
+  try {
+    const service = container.resolve(StagingConfigService);
+    const result = await service.saveConfig(req.body);
+    res.json({ success: true, config: result });
+  } catch (error: any) {
+    console.error('Error saving staging config:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Get all staging configurations
+router.get('/configs/list', async (req, res) => {
+  try {
+    const service = container.resolve(StagingConfigService);
+    const configs = await service.listConfigs();
+    res.json({ success: true, configs });
+  } catch (error: any) {
+    console.error('Error listing staging configs:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Get staging config by name
+router.get('/configs/:name', async (req, res) => {
+  try {
+    const service = container.resolve(StagingConfigService);
+    const config = await service.loadConfig(req.params.name);
+
+    if (!config) {
+      return res.status(404).json({
+        success: false,
+        error: `Staging config '${req.params.name}' not found`
+      });
+    }
+
+    res.json({ success: true, config });
+  } catch (error: any) {
+    console.error('Error loading staging config:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Delete staging configuration
+router.delete('/configs/:name', async (req, res) => {
+  try {
+    const service = container.resolve(StagingConfigService);
+    await service.deleteConfig(req.params.name);
+    res.json({ success: true, message: 'Staging config deleted successfully' });
+  } catch (error: any) {
+    console.error('Error deleting staging config:', error);
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
