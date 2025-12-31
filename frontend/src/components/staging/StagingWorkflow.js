@@ -4,6 +4,7 @@ import { api } from '../../services/api';
 import { StagingTableSelector } from './StagingTableSelector';
 import { StagingColumnMapper } from './StagingColumnMapper';
 import { StagingRelationshipEditor } from './StagingRelationshipEditor';
+import { StagingSaveLoadConfig } from './StagingSaveLoadConfig';
 export const StagingWorkflow = ({ sourceTables: propsSourceTables, onClose, }) => {
     const [currentStep, setCurrentStep] = useState('select-source');
     const [sourceTables, setSourceTables] = useState(propsSourceTables || []);
@@ -137,6 +138,28 @@ export const StagingWorkflow = ({ sourceTables: propsSourceTables, onClose, }) =
             setCurrentStep(steps[currentIndex - 1]);
         }
     };
+    const handleConfigLoad = async (config) => {
+        // Load the staging configuration into state
+        if (config.sourceTables && config.sourceTables.length > 0) {
+            // Load the full structure of source tables
+            try {
+                const result = await api.analyzeTables(config.sourceTables);
+                if (result.success) {
+                    setSourceTables(result.tables);
+                }
+            }
+            catch (error) {
+                console.error('Error loading source tables:', error);
+            }
+        }
+        setMappings(config.mappings || []);
+        setRelationships(config.relationships || []);
+        setWhereConditions(config.whereConditions || []);
+        // Navigate to the appropriate step
+        if (config.sourceTables && config.sourceTables.length > 0) {
+            setCurrentStep('where-clause');
+        }
+    };
     return (_jsx("div", { style: {
             position: 'fixed',
             top: 0,
@@ -163,7 +186,12 @@ export const StagingWorkflow = ({ sourceTables: propsSourceTables, onClose, }) =
                                 border: 'none',
                                 borderRadius: '4px',
                                 cursor: 'pointer',
-                            }, children: "\u2715 Close" })] }), _jsxs("div", { style: { marginBottom: '30px', display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }, children: [(!propsSourceTables || propsSourceTables.length === 0) && (_jsxs(_Fragment, { children: [_jsx("div", { style: {
+                            }, children: "\u2715 Close" })] }), _jsx(StagingSaveLoadConfig, { currentConfig: {
+                        sourceTables: sourceTables.map(t => t.tableName),
+                        mappings,
+                        relationships,
+                        whereConditions,
+                    }, onLoad: handleConfigLoad }), _jsxs("div", { style: { marginBottom: '30px', display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }, children: [(!propsSourceTables || propsSourceTables.length === 0) && (_jsxs(_Fragment, { children: [_jsx("div", { style: {
                                         padding: '8px 16px',
                                         backgroundColor: currentStep === 'select-source' ? '#007bff' : '#28a745',
                                         color: 'white',

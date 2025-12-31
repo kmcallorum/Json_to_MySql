@@ -22,3 +22,5 @@ frontend/node_modules/*
 .venv/*
 node_modules/*
 node_modules/
+backend/.claude/agents/react-test-coverage-specialist.md
+backend/.claude/agents/software-architect-reviewer.md

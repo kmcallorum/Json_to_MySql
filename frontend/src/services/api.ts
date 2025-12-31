@@ -205,4 +205,45 @@ export const api = {
     });
     return response.json();
   },
+
+  // Staging Config API methods
+  async saveStagingConfig(config: {
+    name: string;
+    description?: string;
+    sourceTables: string[];
+    mappings: any[];
+    relationships?: any[];
+    whereConditions?: any[];
+  }) {
+    const response = await fetch(`${API_URL}/staging/configs/save`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(config),
+    });
+    return response.json();
+  },
+
+  async loadStagingConfig(name: string) {
+    const response = await fetch(`${API_URL}/staging/configs/${encodeURIComponent(name)}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    return response.json();
+  },
+
+  async listStagingConfigs() {
+    const response = await fetch(`${API_URL}/staging/configs/list`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    return response.json();
+  },
+
+  async deleteStagingConfig(name: string) {
+    const response = await fetch(`${API_URL}/staging/configs/${encodeURIComponent(name)}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    return response.json();
+  },
 };

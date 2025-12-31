@@ -3,6 +3,7 @@ import { api } from '../../services/api';
 import { StagingTableSelector } from './StagingTableSelector';
 import { StagingColumnMapper } from './StagingColumnMapper';
 import { StagingRelationshipEditor } from './StagingRelationshipEditor';
+import { StagingSaveLoadConfig } from './StagingSaveLoadConfig';
 
 interface StagingWorkflowProps {
   sourceTables?: any[];
@@ -160,6 +161,30 @@ export const StagingWorkflow: React.FC<StagingWorkflowProps> = ({
     }
   };
 
+  const handleConfigLoad = async (config: any) => {
+    // Load the staging configuration into state
+    if (config.sourceTables && config.sourceTables.length > 0) {
+      // Load the full structure of source tables
+      try {
+        const result = await api.analyzeTables(config.sourceTables);
+        if (result.success) {
+          setSourceTables(result.tables);
+        }
+      } catch (error) {
+        console.error('Error loading source tables:', error);
+      }
+    }
+
+    setMappings(config.mappings || []);
+    setRelationships(config.relationships || []);
+    setWhereConditions(config.whereConditions || []);
+
+    // Navigate to the appropriate step
+    if (config.sourceTables && config.sourceTables.length > 0) {
+      setCurrentStep('where-clause');
+    }
+  };
+
   return (
     <div
       style={{
@@ -202,6 +227,17 @@ export const StagingWorkflow: React.FC<StagingWorkflowProps> = ({
             ✕ Close
           </button>
         </div>
+
+        {/* Save/Load Configuration */}
+        <StagingSaveLoadConfig
+          currentConfig={{
+            sourceTables: sourceTables.map(t => t.tableName),
+            mappings,
+            relationships,
+            whereConditions,
+          }}
+          onLoad={handleConfigLoad}
+        />
 
         {/* Progress Indicator */}
         <div style={{ marginBottom: '30px', display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
